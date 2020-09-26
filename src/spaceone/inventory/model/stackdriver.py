@@ -3,7 +3,7 @@ from schematics.types import StringType, ModelType, ListType
 
 
 class StackDriverFilters(Model):
-    name = StringType()
+    key = StringType()
     value = StringType()
 
 

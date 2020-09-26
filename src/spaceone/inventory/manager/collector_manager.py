@@ -120,7 +120,7 @@ class CollectorManager(BaseManager):
             'auto_scaler': auto_scaler_vo,
             'vpc': vpc_vo,
             'subnet': subnet_vo,
-            'stackdriver': stackdriver_manager.get_stackdriver_info(instance.get('name', ''))
+            'stackdriver': stackdriver_manager.get_stackdriver_info(instance.get('id', ''))
         })
 
         server_data.update({
