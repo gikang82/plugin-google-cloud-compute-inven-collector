@@ -241,7 +241,6 @@ class VMInstanceManager(BaseManager):
 
         return cpu, memory
 
-
     @staticmethod
     def _get_primary_ip_address(instance):
         primary_ip_address = ''
@@ -262,10 +261,10 @@ class VMInstanceManager(BaseManager):
                 for access_config in access_configs:
                     nat_ip = access_config.get('natIP', '')
                     if nat_ip != '':
-                        primary_ip_address = nat_ip
+                        public_ip_address = nat_ip
                         break
                 break
-        return primary_ip_address
+        return public_ip_address
 
     @staticmethod
     def _get_ip_addresses(instance):
