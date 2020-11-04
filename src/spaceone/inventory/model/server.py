@@ -39,10 +39,3 @@ class Server(Model):
     _metadata = ModelType(ServerMetadata, serialized_name='metadata')
     reference = ModelType(ReferenceModel)
 
-    # @serializable
-    # def reference(self):
-    #     return {
-    #         "resource_id": ServerData.gcp.self_link,
-    #         "external_link": f"https://console.cloud.google.com/compute/instancesDetail/zones/{self.zone}instances/dk-instance01?project={self.data.compute.account}"
-    #     }
-
