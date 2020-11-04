@@ -27,7 +27,7 @@ google_cloud_instance = ItemDynamicLayout.set_fields('VM Instance', fields=[
     TextDyField.data_source('Public IP', 'data.compute.public_ip_address'),
     ListDyField.data_source('IP Addresses', 'ip_addresses',
                             default_badge={'type': 'outline', 'delimiter': '<br>'}),
-    ListDyField.data_source('Affected Rules', 'data.compute.sg_group_names',
+    ListDyField.data_source('Affected Rules', 'data.compute.security_groups',
                             default_badge={'type': 'outline', 'delimiter': '<br>'}),
 
     DateTimeDyField.data_source('Launched At', 'data.compute.launched_at'),

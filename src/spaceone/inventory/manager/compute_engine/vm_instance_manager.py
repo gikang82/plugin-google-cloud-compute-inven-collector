@@ -183,7 +183,8 @@ class VMInstanceManager(BaseManager):
                 'account' : StringType()                  # Project_id
                 'image' : StringType()
                 'launched_at' : DateTimeType()
-                tags = DictType(StringType, default={})
+                'security_groups': []
+                'tags' = DictType(StringType, default={})
             }
         '''
 

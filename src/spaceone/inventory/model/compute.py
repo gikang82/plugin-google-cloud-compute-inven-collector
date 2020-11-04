@@ -13,5 +13,5 @@ class Compute(Model):
     account = StringType()
     image = StringType()
     launched_at = DateTimeType()
-    sg_group_names = ListType(StringType, default=[])
+    security_groups = ListType(StringType, default=[])
     tags = DictType(StringType, default={})

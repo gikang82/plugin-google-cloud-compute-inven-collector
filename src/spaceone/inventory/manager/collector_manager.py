@@ -105,18 +105,18 @@ class CollectorManager(BaseManager):
         disk_vos = disk_manager.get_disk_info(instance, disks)
         vpc_vo, subnet_vo = vpc_manager.get_vpc_info(instance, vpcs, subnets)
         nic_vos = nic_manager.get_nic_info(instance, subnet_vo)
-        sg_groups_vos = security_group_manager.get_security_group_rules_info(instance, firewalls)
-        sg_group_names = [d.get('security_group_name') for d in sg_groups_vos if d.get('security_group_name', '') != '']
+        security_group_vos = security_group_manager.get_security_group_rules_info(instance, firewalls)
+        security_groups = [d.get('security_group_name') for d in security_group_vos if d.get('security_group_name', '') != '']
         
         server_data.update({
             'nics': nic_vos,
             'disks': disk_vos,
         })
 
-        server_data['data']['compute']['sg_group_names'] = sg_group_names
+        server_data['data']['compute']['security_groups'] = security_groups
         server_data['data'].update({
             'load_balancers': load_balancer_vos,
-            'security_group': sg_groups_vos,
+            'security_group': security_group_vos,
             'auto_scaler': auto_scaler_vo,
             'vpc': vpc_vo,
             'subnet': subnet_vo,
@@ -127,7 +127,7 @@ class CollectorManager(BaseManager):
             '_metadata': meta_manager.get_metadata(),
             'reference': ReferenceModel({
                 'resource_id': server_data['data']['google_cloud']['self_link'],
-                'external_link': f"https://console.cloud.google.com/compute/instancesDetail/zones/{zone}instances/{server_data['name']}?project={server_data['data']['compute']['account']}"
+                'external_link': f"https://console.cloud.google.com/compute/instancesDetail/zones/{zone}/instances/{server_data['name']}?project={server_data['data']['compute']['account']}"
             })
         })
 
