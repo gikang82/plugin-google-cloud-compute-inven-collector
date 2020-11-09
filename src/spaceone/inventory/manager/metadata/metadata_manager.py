@@ -12,8 +12,11 @@ google_cloud_instance = ItemDynamicLayout.set_fields('VM Instance', fields=[
     EnumDyField.data_source('Instance State', 'data.compute.instance_state', default_state={
         'safe': ['RUNNING'],
         'warning': ['STAGING', 'PROVISIONING', 'REPAIRING', 'STOPPING', 'SUSPENDING'],
-        'disable': ['TERMINATED'],
-        'alert': ['SUSPENDED']
+        'disable': [],
+        'alert': ['SUSPENDED', 'TERMINATED']
+    }),
+    EnumDyField.data_source('Preemptible', 'data.google_cloud.scheduling.preemptible', default_badge={
+        'indigo.500': ['true'], 'coral.600': ['false']
     }),
     TextDyField.data_source('Instance Type', 'data.compute.instance_type'),
     TextDyField.data_source('Image', 'data.compute.image'),
