@@ -260,7 +260,12 @@ class CollectorManager(BaseManager):
 
     @staticmethod
     def list_cloud_service_types():
-        return [CloudServiceType()]
+        cloud_service_type = {
+            'tags': {
+                'spaceone:icon': 'https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/cloud-services/google_cloud/Compute_Engine.svg',
+            }
+        }
+        return [CloudServiceType(cloud_service_type, strict=False)]
 
     @staticmethod
     def _set_project_id_to_zone_info(zone_info, project_id):
