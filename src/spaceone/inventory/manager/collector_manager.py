@@ -277,7 +277,7 @@ class CollectorManager(BaseManager):
         REGION_INFO = {
             "asia-east1": {"name": "Taiwan (Changhua County)", "tags": {"latitude": "24.051196", "longitude": "120.516430"}},
             "asia-east2": {"name": "Hong Kong", "tags": {"latitude": "22.283289", "longitude": "114.155851"}},
-            "asia-northeast1": {"name": "Japan (Tokyo)", "tags": {"latitude": "35.660648", "longitude": "139.729186"}},
+            "asia-northeast1": {"name": "Japan (Tokyo)", "tags": {"latitude": "35.628391", "longitude": "139.417634"}},
             "asia-northeast2": {"name": "Japan (Osaka)", "tags": {"latitude": "34.705403", "longitude": "135.490119"}},
             "asia-northeast3": {"name": "South Korea (Seoul)", "tags": {"latitude": "37.499968", "longitude": "127.036376"}},
             "asia-south1": {"name": "India (Mumbai)", "tags": {"latitude": "19.164951", "longitude": "72.851765"}},
