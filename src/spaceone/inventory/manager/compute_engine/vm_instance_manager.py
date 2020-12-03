@@ -39,6 +39,10 @@ class VMInstanceManager(BaseManager):
                     "labels": [{
                         key: '',
                         value: ''
+                    }],
+                    "tags": [{
+                        key: '',
+                        value: ''
                     }]
                 },
                 "hardware": {
@@ -146,7 +150,8 @@ class VMInstanceManager(BaseManager):
             "reservation_affinity": self.get_reservation_affinity(instance),
             "deletion_protection": instance.get('deletionProtection', False),
             "scheduling": self.get_scheduling(instance),
-            "labels": self.get_labels(instance)
+            "labels": self.get_labels(instance),
+            "tags": self.get_labels(instance),
         }
 
         return GoogleCloud(google_cloud, strict=False)
