@@ -3,7 +3,7 @@ from spaceone.inventory.model.metadata.metadata import ServerMetadata
 from spaceone.inventory.model.metadata.metadata_dynamic_layout import ItemDynamicLayout, TableDynamicLayout, \
     ListDynamicLayout
 from spaceone.inventory.model.metadata.metadata_dynamic_field import TextDyField, EnumDyField, ListDyField, \
-    DateTimeDyField
+    DateTimeDyField, SizeField
 
 google_cloud_instance = ItemDynamicLayout.set_fields('VM Instance', fields=[
     TextDyField.data_source('Account', 'data.compute.account'),
@@ -55,7 +55,7 @@ compute_engine = ListDynamicLayout.set_layouts('Compute Engine', layouts=[google
 disk = TableDynamicLayout.set_fields('Disk', root_path='disks', fields=[
     TextDyField.data_source('Index', 'device_index'),
     TextDyField.data_source('Name', 'tags.disk_name'),
-    TextDyField.data_source('Size(GB)', 'size'),
+    SizeField.data_source('Size', 'size'),
     TextDyField.data_source('Disk ID', 'tags.disk_id'),
     EnumDyField.data_source('Disk Type', 'tags.disk_type', default_outline_badge=['local-ssd', 'pd-balanced', 'pd-ssd', 'pd-standard']),
     TextDyField.data_source('Read IOPS', 'tags.read_iops'),
