@@ -19,7 +19,7 @@ class BaseLayoutField(Model):
         return _options
 
     name = StringType(default='')
-    type = StringType(default="item", choices=("item", "table", "query-search-table", "simple-table", "list", "raw"))
+    type = StringType(default="item", choices=("item", "table", "query-search-table", "simple-table", "list", "raw", "html"))
     options = PolyModelType(LayoutOptions, serialize_when_none=False)
 
 
@@ -40,6 +40,11 @@ class QuerySearchTableLayoutOption(LayoutOptions):
 
 
 class RawLayoutOption(LayoutOptions):
+    class Options:
+        serialize_when_none = False
+
+
+class HTMLLayoutOption(LayoutOptions):
     class Options:
         serialize_when_none = False
 
@@ -144,4 +149,18 @@ class RawDynamicLayout(BaseLayoutField):
             _options = RawLayoutOption({'root_path': root_path})
 
         # return cls(name=name, options=_options)
+        return cls({'name': name, 'options': _options})
+
+
+class HTMLDynamicLayout(BaseLayoutField):
+    type = StringType(default='html')
+    options = PolyModelType(HTMLLayoutOption)
+
+    @classmethod
+    def set(cls, name='', root_path=None):
+        if root_path is None:
+            _options = HTMLLayoutOption()
+        else:
+            _options = HTMLLayoutOption({'root_path': root_path})
+
         return cls({'name': name, 'options': _options})
