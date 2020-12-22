@@ -1,4 +1,5 @@
 from spaceone.core.manager import BaseManager
+from pprint import pprint
 from spaceone.inventory.model.disk import Disk
 
 class DiskManager(BaseManager):
@@ -47,12 +48,12 @@ class DiskManager(BaseManager):
                     'write_throughput': self.get_throughput_rate(single_disk_type, disk_sz),
                     'labels': self._get_labels(matching_single_disk_tag)
                 })
-
+            size = self._get_bytes(int(matching_single_disk_tag.get('sizeGb')))
             single_disk = {
                 'device_index': int_disk.get('index'),
                 'device': '',
                 'disk_type': 'disk',
-                'size': disk_sz,
+                'size': float(size),
                 'tags': single_disk_tag
             }
 
@@ -113,6 +114,10 @@ class DiskManager(BaseManager):
         type_str = matching_single_disk_tag.get('type', '')
         type_split = type_str.split('/')
         return type_split[-1]
+
+    @staticmethod
+    def _get_bytes(number):
+        return 1024 * 1024 * 1024 * number
 
     @staticmethod
     def _get_labels(instance):
