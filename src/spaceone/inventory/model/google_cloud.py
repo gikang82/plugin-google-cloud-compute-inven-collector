@@ -20,3 +20,4 @@ class GoogleCloud(Model):
     deletion_protection = BooleanType(default=False)
     scheduling = ModelType(Scheduling)
     labels = ListType(ModelType(Labels), default=[])
+    tags = ListType(ModelType(Labels), default=[])

@@ -32,10 +32,11 @@ class Server(Model):
     primary_ip_address = StringType()
     ip_addresses = ListType(StringType())
     region_code = StringType()
-    region_type = StringType(default='GOOGLE_CLOUD')
     nics = ListType(ModelType(NIC))
     disks = ListType(ModelType(Disk))
     data = ModelType(ServerData)
+    cloud_service_type = StringType(default='Instance')
+    cloud_service_group = StringType(default='ComputeEngine')
     _metadata = ModelType(ServerMetadata, serialized_name='metadata')
     reference = ModelType(ReferenceModel)
 

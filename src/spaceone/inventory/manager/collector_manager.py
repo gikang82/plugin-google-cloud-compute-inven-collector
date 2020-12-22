@@ -9,6 +9,8 @@ from spaceone.inventory.manager.compute_engine import VMInstanceManager, AutoSca
 from spaceone.inventory.manager.metadata.metadata_manager import MetadataManager
 from spaceone.inventory.model.server import Server, ReferenceModel
 from spaceone.inventory.model.region import Region
+from spaceone.inventory.model.cloud_service_type import CloudServiceType
+
 from pprint import pprint
 _LOGGER = logging.getLogger(__name__)
 NUMBER_OF_CONCURRENT = 20
@@ -241,28 +243,6 @@ class CollectorManager(BaseManager):
             url_maps.extend(self.list_region_url_maps(region_param))
             backend_svcs.extend(self.list_region_backend_svcs(region_param))
 
-        # Generate Thread Pool for collecting Subnets
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-        #     future_executors = []
-        #     for mt_param in mt_params:
-        #         future_executors.append(executor.submit(self.list_subnets, mt_param))
-        #
-        #     for future in concurrent.futures.as_completed(future_executors):
-        #         for result in future.result():
-        #             subnets.append(result)
-
-        # Generate Thread Pool for collecting Forwarding Rules
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-        #     future_executors = []
-        #     for mt_param in mt_params:
-        #         future_executors.append(executor.submit(self.list_forwarding_rules, mt_param))
-        #
-        #     for future in concurrent.futures.as_completed(future_executors):
-        #         for result in future.result():
-        #             forwarding_rules.append(result)
-
-        # print("====== END of zone independent resources")
-
         return {
             'public_images': public_images,
             'images': images,
@@ -275,9 +255,17 @@ class CollectorManager(BaseManager):
             'backend_svcs': backend_svcs
         }
 
-
     def generate_region_params(self, regions):
         return list(map(lambda region: {'region': region['name']}, regions))
+
+    @staticmethod
+    def list_cloud_service_types():
+        cloud_service_type = {
+            'tags': {
+                'spaceone:icon': 'https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/cloud-services/google_cloud/Compute_Engine.svg',
+            }
+        }
+        return [CloudServiceType(cloud_service_type, strict=False)]
 
     @staticmethod
     def _set_project_id_to_zone_info(zone_info, project_id):
@@ -289,7 +277,7 @@ class CollectorManager(BaseManager):
         REGION_INFO = {
             "asia-east1": {"name": "Taiwan (Changhua County)", "tags": {"latitude": "24.051196", "longitude": "120.516430"}},
             "asia-east2": {"name": "Hong Kong", "tags": {"latitude": "22.283289", "longitude": "114.155851"}},
-            "asia-northeast1": {"name": "Japan (Tokyo)", "tags": {"latitude": "35.660648", "longitude": "139.729186"}},
+            "asia-northeast1": {"name": "Japan (Tokyo)", "tags": {"latitude": "35.628391", "longitude": "139.417634"}},
             "asia-northeast2": {"name": "Japan (Osaka)", "tags": {"latitude": "34.705403", "longitude": "135.490119"}},
             "asia-northeast3": {"name": "South Korea (Seoul)", "tags": {"latitude": "37.499968", "longitude": "127.036376"}},
             "asia-south1": {"name": "India (Mumbai)", "tags": {"latitude": "19.164951", "longitude": "72.851765"}},

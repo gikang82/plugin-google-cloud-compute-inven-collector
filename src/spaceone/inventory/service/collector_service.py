@@ -121,9 +121,13 @@ class CollectorService(BaseService):
 
         server_resource_format = {'resource_type': 'inventory.Server',
                                   'match_rules': {'1': ['reference.resource_id']}}
-
         region_resource_format = {'resource_type': 'inventory.Region',
-                                  'match_rules': {'1': ['region_code', 'region_type']}}
+                                  'match_rules': {'1': ['region_code', 'provider']}}
+        cloud_service_type_resource_format = {'resource_type': 'inventory.CloudServiceType',
+                                              'match_rules': {'1': ['name', 'group', 'provider']}}
+
+        for cloud_service_type in self.collector_manager.list_cloud_service_types():
+            yield cloud_service_type, cloud_service_type_resource_format
 
         # parameter setting for multi threading
         mt_params = self.set_params_for_zones(params, all_regions)
@@ -165,25 +169,6 @@ class CollectorService(BaseService):
             for resource_region in resource_regions:
                 yield resource_region, region_resource_format
 
-        #
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-        #     future_executors = []
-        #     for mt_param in mt_params:
-        #         future_executors.append(executor.submit(self.collector_manager.list_resources, mt_param))
-        #
-        #     for future in concurrent.futures.as_completed(future_executors):
-        #         for result in future.result():
-        #             collected_region = self.collector_manager.get_region_from_result(result)
-        #
-        #             if collected_region is not None and collected_region.region_code not in collected_region_code:
-        #                 resource_regions.append(collected_region)
-        #                 collected_region_code.append(collected_region.region_code)
-        #
-        #             yield result, server_resource_format
-        #
-        # for resource_region in resource_regions:
-        #     yield resource_region, region_resource_format
-
         print(f'############## TOTAL FINISHED {time.time() - start_time} Sec ##################')
 
     def set_params_for_zones(self, params, all_regions):
@@ -194,16 +179,11 @@ class CollectorService(BaseService):
         target_zones = self.get_all_zones(params.get('secret_data', ''), filter_region_name, all_regions)
 
         for target_zone in target_zones:
-            # _conn = self.locator.get_connector('GoogleCloudComputeConnector')
-            # _conn.get_connect(params['secret_data'])
-
             params_for_zones.append({
-                # 'connector': _conn,
                 'zone_info': target_zone,
                 'query': query,
                 'secret_data': params['secret_data'],
                 'instance_ids': instance_ids,
-                # 'resources': resources
             })
 
         return params_for_zones
@@ -221,7 +201,7 @@ class CollectorService(BaseService):
         if 'region_name' in secret_data:
             match_zones = self.match_zones_from_region(all_regions, secret_data['region_name'])
 
-        if len(filter_region_name) > 0:
+        if filter_region_name:
             for _region in filter_region_name:
                 match_zones = self.match_zones_from_region(all_regions, _region)
 
@@ -275,7 +255,7 @@ class CollectorService(BaseService):
                 if not isinstance(value, list):
                     value = [value]
 
-                if len(value) > 0:
+                if value:
                     filters.append({'Name': key, 'Values': value})
 
         return filters, instance_ids, region_name

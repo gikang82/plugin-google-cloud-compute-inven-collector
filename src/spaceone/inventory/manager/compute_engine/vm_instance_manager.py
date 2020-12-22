@@ -20,7 +20,6 @@ class VMInstanceManager(BaseManager):
             "primary_ip_address": '',
             "ip_addresses": '',
             "region_code": '',
-            "region_type": ''
             "data":  {
                 "os": {
                     "os_arch": "",
@@ -38,6 +37,10 @@ class VMInstanceManager(BaseManager):
                         'preemptible': '',
                     },
                     "labels": [{
+                        key: '',
+                        value: ''
+                    }],
+                    "tags": [{
                         key: '',
                         value: ''
                     }]
@@ -89,8 +92,7 @@ class VMInstanceManager(BaseManager):
             'provider': 'google_cloud',
             'primary_ip_address': self._get_primary_ip_address(instance),
             'ip_addresses': self._get_ip_addresses(instance),
-            'region_code': zone_info.get('region', ''),
-            'region_type': 'GOOGLE_CLOUD'
+            'region_code': zone_info.get('region', '')
         }
 
         return server_data
@@ -148,7 +150,8 @@ class VMInstanceManager(BaseManager):
             "reservation_affinity": self.get_reservation_affinity(instance),
             "deletion_protection": instance.get('deletionProtection', False),
             "scheduling": self.get_scheduling(instance),
-            "labels": self.get_labels(instance)
+            "labels": self.get_labels(instance),
+            "tags": self.get_labels(instance),
         }
 
         return GoogleCloud(google_cloud, strict=False)
