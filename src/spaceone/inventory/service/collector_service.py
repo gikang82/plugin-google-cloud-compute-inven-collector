@@ -76,7 +76,8 @@ class CollectorService(BaseService):
         """
         capability = {
             'filter_format': FILTER_FORMAT,
-            'supported_resource_type': SUPPORTED_RESOURCE_TYPE
+            'supported_resource_type': SUPPORTED_RESOURCE_TYPE,
+            'supported_features': ['garbage_collection']
             }
         return {'metadata': capability}
 
