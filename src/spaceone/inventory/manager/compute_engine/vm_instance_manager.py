@@ -222,7 +222,8 @@ class VMInstanceManager(BaseManager):
 
         for disk in disks:
             if name == disk.get('name', ''):
-                image = disk.get('sourceImage', '')
+                _image = disk.get('sourceImage', '')
+                image = _image[_image.rfind('/')+1:]
                 break
         return image
 
