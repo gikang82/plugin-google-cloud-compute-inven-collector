@@ -112,6 +112,10 @@ class CollectorManager(BaseManager):
         security_groups = [d.get('security_group_name') for d in security_group_vos if
                            d.get('security_group_name', '') != '']
 
+
+        google_cloud = server_data['data'].get('google_cloud', {})
+        _google_cloud = google_cloud.to_primitive()
+        labels = _google_cloud.get('labels', [])
         server_data.update({
             'nics': nic_vos,
             'disks': disk_vos,
@@ -128,6 +132,7 @@ class CollectorManager(BaseManager):
         })
 
         server_data.update({
+            'tags': labels,
             '_metadata': meta_manager.get_metadata(),
             'reference': ReferenceModel({
                 'resource_id': server_data['data']['google_cloud']['self_link'],
