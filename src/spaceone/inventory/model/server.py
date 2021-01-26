@@ -4,6 +4,11 @@ from spaceone.inventory.model import OS, GoogleCloud, Hardware, SecurityGroup, C
     AutoScaler, NIC, Disk, ServerMetadata, StackDriver
 
 
+class Labels(Model):
+    key = StringType()
+    value = StringType()
+
+
 class ReferenceModel(Model):
     class Option:
         serialize_when_none = False
@@ -37,6 +42,7 @@ class Server(Model):
     data = ModelType(ServerData)
     cloud_service_type = StringType(default='Instance')
     cloud_service_group = StringType(default='ComputeEngine')
+    tags = ListType(ModelType(Labels), default=[])
     _metadata = ModelType(ServerMetadata, serialized_name='metadata')
     reference = ModelType(ReferenceModel)
 
