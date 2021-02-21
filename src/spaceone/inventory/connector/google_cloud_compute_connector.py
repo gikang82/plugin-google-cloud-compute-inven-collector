@@ -47,7 +47,8 @@ class GoogleCloudComputeConnector(BaseConnector):
         return result.get('items', [])
 
     def list_instances(self, **query):
-        status_filter = {'key': 'status', 'values': ['PROVISIONING', 'STAGING', 'RUNNING', 'STOPPING', 'REPAIRING', 'SUSPENDING', 'SUSPENDED', 'TERMINATED']}
+        status_filter = {'key': 'status', 'values': ['PROVISIONING', 'STAGING', 'RUNNING', 'STOPPING', 'REPAIRING',
+                                                     'SUSPENDING', 'SUSPENDED', 'TERMINATED']}
 
         if 'filter' in query:
             query.get('filter').append(status_filter)
@@ -56,120 +57,255 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         query = self.generate_key_query('filter', self._get_filter_to_params(**query), '', is_default=True, **query)
 
-        result = self.client.instances().list(**query).execute()
-        compute_instances = result.get('items', [])
-        return compute_instances
+        instance_list = []
+        query.update({'project': self.project_id})
+        request = self.client.instances().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for key, _instance_list in response['items'].items():
+                    if 'instances' in _instance_list:
+                        instance_list.extend(_instance_list.get('instances'))
+                request = self.client.instances().aggregatedList_next(previous_request=request,
+                                                                      previous_response=response)
+        except Exception as e:
+            print(e)
+            pass
 
-    def list_machine_types(self, **query):
-        query = self.generate_query(**query)
-        result = self.client.machineTypes().list(**query).execute()
-        instance_types = result.get('items', [])
-        return instance_types
-
-    def list_url_maps(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.urlMaps().list(**query).execute()
-        url_map = response.get('items', [])
-        return url_map
-
-    def list_backend_svcs(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.backendServices().list(**query).execute()
-        url_map = response.get('items', [])
-        return url_map
-
-
-    def list_disk(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.disks().list(**query).execute()
-        disks = response.get('items', [])
-        return disks
-
-    def list_disk_types(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.diskTypes().list(**query).execute()
-        disks_types = response.get('items', [])
-        return disks_types
-
-    def list_auto_scalers(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.autoscalers().list(**query).execute()
-        auto_scaler = response.get('items', [])
-        return auto_scaler
-
-    def list_firewalls(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.firewalls().list(**query).execute()
-        firewall = response.get('items', [])
-        return firewall
-
-    def list_public_images(self, **query):
-        response = self.client.images().list(**query).execute()
-        firewall = response.get('items', [])
-        return firewall
-
-    def list_images(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.images().list(**query).execute()
-        firewall = response.get('items', [])
-        return firewall
-
-    def list_instance_groups(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.instanceGroups().list(**query).execute()
-        firewall = response.get('items', [])
-        return firewall
-
-    def list_instance_from_instance_groups(self, instance_group_name, zone, **query):
-        query = self.generate_query(**query)
-        query.update({
-            'instanceGroup': instance_group_name,
-            'zone': zone
-        })
-        response = self.client.instanceGroups().listInstances(**query).execute()
-        instance_list = response.get('items', [])
         return instance_list
 
-    def list_instance_group_managers(self, **query):
+    def list_machine_types(self, **query):
+        machine_type_list = []
+        query.update({'project': self.project_id})
+        request = self.client.machineTypes().aggregatedList(**query)
+        while request is not None:
+            try:
+                response = request.execute()
+                for key, machine_type in response['items'].items():
+                    if 'machineTypes' in machine_type:
+                        machine_type_list.extend(machine_type.get('machineTypes'))
+                request = self.client.machineTypes().aggregatedList_next(previous_request=request,
+                                                                         previous_response=response)
+            except Exception as e:
+                print(e)
+                pass
+        return machine_type_list
+
+    def list_url_maps(self, **query):
+        url_map_list = []
+        query.update({'project': self.project_id})
+        request = self.client.urlMaps().aggregatedList(**query)
+        while request is not None:
+            response = request.execute()
+            for key, url_scoped_list in response['items'].items():
+                if 'urlMaps' in url_scoped_list:
+                    url_map_list.extend(url_scoped_list.get('urlMaps'))
+            request = self.client.urlMaps().aggregatedList_next(previous_request=request, previous_response=response)
+        return url_map_list
+
+    def list_back_end_services(self, **query):
+        backend_svc_list = []
+        query.update({'project': self.project_id})
+        request = self.client.backendServices().aggregatedList(**query)
+        while request is not None:
+            response = request.execute()
+            for key, url_scoped_list in response['items'].items():
+                if 'backendServices' in url_scoped_list:
+                    backend_svc_list.extend(url_scoped_list.get('backendServices'))
+            request = self.client.backendServices().aggregatedList_next(previous_request=request,
+                                                                        previous_response=response)
+        return backend_svc_list
+
+    def list_disks(self, **query):
+        disk_list = []
+        query.update({'project': self.project_id})
+        request = self.client.disks().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for key, _disk in response['items'].items():
+                    if 'disks' in _disk:
+                        disk_list.extend(_disk.get('disks'))
+                request = self.client.disks().aggregatedList_next(previous_request=request,
+                                                                  previous_response=response)
+        except Exception as e:
+            print(f'Error occurred at DiskConnector: disks().aggregatedList(**query) : skipped \n {e}')
+            pass
+
+        return disk_list
+
+    def list_autoscalers(self, **query):
+        autoscaler_list = []
+        query.update({'project': self.project_id})
+        request = self.client.autoscalers().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for key, _autoscaler_list in response['items'].items():
+                    if 'autoscalers' in _autoscaler_list:
+                        autoscaler_list.extend(_autoscaler_list.get('autoscalers'))
+                request = self.client.autoscalers().aggregatedList_next(previous_request=request,
+                                                                        previous_response=response)
+        except Exception as e:
+            print(e)
+            pass
+
+        return autoscaler_list
+
+    def list_firewall(self, **query):
+        firewalls_list = []
+        query.update({'project': self.project_id})
+        request = self.client.firewalls().list(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for backend_bucket in response.get('items', []):
+                    firewalls_list.append(backend_bucket)
+                request = self.client.firewalls().list_next(previous_request=request, previous_response=response)
+        except Exception as e:
+            print(f'Error occurred at FirewallConnector: firewalls().list(**query) : skipped \n {e}')
+            pass
+        return firewalls_list
+
+    def list_images(self, public_id, **query) -> dict:
+        public_images = {}
+        pprint(public_id)
+        public_image_list = [
+            {'key': 'centos', 'value': 'centos-cloud'},
+            {'key': 'coreos', 'value': 'coreos-cloud'},
+            {'key': 'debian', 'value': 'debian-cloud'},
+            {'key': 'google', 'value': 'google-containers'},
+            {'key': 'opensuse', 'value': 'opensuse-cloud'},
+            {'key': 'rhel', 'value': 'rhel-cloud'},
+            {'key': 'suse', 'value': 'suse-cloud'},
+            {'key': 'ubuntu', 'value': 'ubuntu-os-cloud'},
+            {'key': 'windows', 'value': 'windows-cloud'},
+            {'key': 'custom', 'value': public_id}
+        ]
+
+        for public_image in public_image_list:
+            query.update({'project': public_image.get('value'),
+                          'orderBy': 'creationTimestamp desc'}
+                         )
+            response = self.client.images().list(**query).execute()
+            public_images[public_image.get('key')] = response.get('items', [])
+
+        return public_images
+
+    def list_instance_groups(self, **query):
+        instance_group_list = []
+        query.update({'project': self.project_id})
+        request = self.client.instanceGroups().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for key, _instance_group_list in response['items'].items():
+                    if 'instanceGroups' in _instance_group_list:
+                        instance_group_list.extend(_instance_group_list.get('instanceGroups'))
+                request = self.client.instanceGroups().aggregatedList_next(previous_request=request,
+                                                                           previous_response=response)
+        except Exception as e:
+            print(e)
+            pass
+        return instance_group_list
+
+    def list_instance_from_instance_groups(self, instance_group_name, key, loc, **query):
         query = self.generate_query(**query)
-        response = self.client.instanceGroupManagers().list(**query).execute()
-        firewall = response.get('items', [])
-        return firewall
+        query.update({key: loc, 'instanceGroup': instance_group_name})
+        response = []
+
+        try:
+
+            request = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
+                self.client.regionInstanceGroups().listInstances(**query).execute()
+            response = request.get('items', [])
+
+        except Exception as e:
+            print(e)
+            pass
+
+        return response
+
+    def list_instance_group_managers(self, **query):
+        instance_group_manager_list = []
+        query.update({'project': self.project_id})
+        request = self.client.instanceGroupManagers().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for key, _instance_group_manager_list in response['items'].items():
+                    if 'instanceGroupManagers' in _instance_group_manager_list:
+                        instance_group_manager_list.extend(_instance_group_manager_list.get('instanceGroupManagers'))
+                request = self.client.instanceGroupManagers().aggregatedList_next(previous_request=request,
+                                                                                  previous_response=response)
+        except Exception as e:
+            print(e)
+            pass
+        return instance_group_manager_list
 
     def list_vpcs(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.networks().list(**query).execute()
-        return response.get('items', [])
+        network_list = []
+        query.update({'project': self.project_id})
+        request = self.client.networks().list(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for network in response.get('items', []):
+                    network_list.append(network)
+                request = self.client.networks().list_next(previous_request=request, previous_response=response)
+        except Exception as e:
+            print(f'Error occurred at networks().list(**query) : skipped \n {e}')
+            pass
+        return network_list
 
-    def list_subnets(self, **query):
+    def list_subnetworks(self, **query):
+        subnetworks_list = []
         query = self.generate_query(**query)
-        response = self.client.subnetworks().list(**query).execute()
-        return response.get('items', [])
-
-    def list_region_url_maps(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.regionUrlMaps().list(**query).execute()
-        return response.get('items', [])
-
-    def list_region_backend_svcs(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.regionBackendServices().list(**query).execute()
-        return response.get('items', [])
+        request = self.client.subnetworks().aggregatedList(**query)
+        try:
+            while request is not None:
+                response = request.execute()
+                for name, _subnetworks_list in response['items'].items():
+                    if 'subnetworks' in _subnetworks_list:
+                        subnetworks_list.extend(_subnetworks_list.get('subnetworks'))
+                request = self.client.addresses().aggregatedList_next(previous_request=request,
+                                                                      previous_response=response)
+        except Exception as e:
+            print(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
+            pass
+        return subnetworks_list
 
     def list_target_pools(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.targetPools().list(**query).execute()
-        return response.get('items', [])
+        target_pool_list = []
+        query.update({'project': self.project_id})
+        request = self.client.targetPools().aggregatedList(**query)
+        while request is not None:
+            response = request.execute()
+            for key, pool_scoped_list in response['items'].items():
+                if 'targetPools' in pool_scoped_list:
+                    target_pool_list.extend(pool_scoped_list.get('targetPools'))
+            request = self.client.targetPools().aggregatedList_next(previous_request=request,
+                                                                    previous_response=response)
+        return target_pool_list
 
     def list_forwarding_rules(self, **query):
-        query = self.generate_query(**query)
-        response = self.client.forwardingRules().list(**query).execute()
-        return response.get('items', [])
+        forwarding_rule_list = []
+        query.update({'project': self.project_id})
+        request = self.client.forwardingRules().aggregatedList(**query)
+        while request is not None:
+            response = request.execute()
+            for key, forwarding_scoped_list in response['items'].items():
+                if 'forwardingRules' in forwarding_scoped_list:
+                    forwarding_rule_list.extend(forwarding_scoped_list.get('forwardingRules'))
+            request = self.client.forwardingRules().aggregatedList_next(previous_request=request,
+                                                                        previous_response=response)
+        return forwarding_rule_list
 
-    def set_instance_into_instance_group_managers(self, instance_group_managers, zone):
+    def set_instance_into_instance_group_managers(self, instance_group_managers):
         for instance_group in instance_group_managers:
+            key, loc = self._get_loc_from(instance_group)
             instance_group_name = instance_group.get('baseInstanceName', '')
-            inst_list = self.list_instance_from_instance_groups(instance_group_name, zone)
+            inst_list = self.list_instance_from_instance_groups(instance_group_name, key, loc)
             instance_group.update({
                 'instance_list': inst_list
             })
@@ -210,6 +346,13 @@ class GoogleCloudComputeConnector(BaseConnector):
         index = zone.find('-')
         region = zone[0:index] if index > -1 else ''
         return region
+
+    @staticmethod
+    def _get_loc_from(instance_group):
+        key = 'region' if instance_group.get('region') else 'zone'
+        region = instance_group.get('region')
+        loc = region if region else instance_group.get('zone')
+        return key, loc[loc.rfind('/')+1:]
 
     @staticmethod
     def _get_full_filter_string(filter_key, filter_values):
