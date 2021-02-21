@@ -169,7 +169,6 @@ class GoogleCloudComputeConnector(BaseConnector):
 
     def list_images(self, public_id, **query) -> dict:
         public_images = {}
-        pprint(public_id)
         public_image_list = [
             {'key': 'centos', 'value': 'centos-cloud'},
             {'key': 'coreos', 'value': 'coreos-cloud'},
