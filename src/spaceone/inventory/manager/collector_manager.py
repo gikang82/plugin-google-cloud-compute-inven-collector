@@ -35,29 +35,67 @@ class CollectorManager(BaseManager):
         self.gcp_connector: GoogleCloudComputeConnector = self.locator.get_connector('GoogleCloudComputeConnector')
         self.gcp_connector.get_connect(secret_data)
 
-    def list_regions(self, secret_data):
+    def list_resources(self, params):
+        resources = []
+        '''
+        params = {
+            'zone_info': {
+               'region': 'us-east-1,
+               'zone': 'us-east-1a'
+            },
+            'query': query,
+            'secret_data': 'secret_data',
+            'instance_ids': [instance_id, instance_id, ...],
+            'resources': {
+                'url_maps': url_maps,
+                'images': images,
+                'vpcs': vpcs,
+                'fire_walls': fire_walls,
+                'subnets': subnets,
+                'forwarding_rules': forwarding_rules,
+            },
+            'instances': [...]
+        }
+        '''
+
+        print(f"START LIST Resources")
+        start_time = time.time()
+        secret_data = params.get('secret_data', {})
+        global_resources = self.get_global_resources(secret_data)
+        compute_vms = self.gcp_connector.list_instances()
+
+        for compute_vm in compute_vms:
+            zone, region = self._get_zone_and_region(compute_vm)
+            zone_info = {'zone': zone, 'region': region, 'project_id': secret_data.get('project_id', '')}
+            try:
+                resources.append(self.get_instances(zone_info, compute_vm, global_resources))
+            except Exception as e:
+                print(f'[ERROR: {zone}] : {e}')
+
+        print(f' Compute VMs Finished {time.time() - start_time} Seconds')
+        return resources
+
+    def get_global_resources(self, secret_data):
+        # print("[ GET zone independent resources ]")
         if self.gcp_connector is None:
             self.set_connector(secret_data)
 
-        return self.gcp_connector.list_regions()
+        return {
+            'disk': self.gcp_connector.list_disks(),
+            'auto_scaler': self.gcp_connector.list_autoscalers(),
+            'instance_type': self.gcp_connector.list_machine_types(),
+            'instance_group': self.gcp_connector.list_instance_group_managers(),
+            'public_images': self.gcp_connector.list_images(secret_data.get('project_id')),
+            'vpcs': self.gcp_connector.list_vpcs(),
+            'subnets': self.gcp_connector.list_subnetworks(),
+            'fire_walls': self.gcp_connector.list_firewall(),
+            'forwarding_rules': self.gcp_connector.list_forwarding_rules(),
+            'target_pools': self.gcp_connector.list_target_pools(),
+            'url_maps': self.gcp_connector.list_url_maps(),
+            'backend_svcs':  self.gcp_connector.list_back_end_services()
+        }
 
-    def list_zones(self, secret_data):
-        if self.gcp_connector is None:
-            self.set_connector(secret_data)
-
-        return self.gcp_connector.list_zones()
-
-    def list_instances_only(self, params):
-        instance_filter = {'zone': params['zone_info']['zone']}
-
-        if len(params.get('instance_ids', [])) > 0:
-            instance_filter.update({'filter': [{'key': 'id', 'values': params['instance_ids']}]})
-
-        return self.gcp_connector.list_instances(**instance_filter)
-
-    def get_instance(self, zone_info, instance, global_resources):
-        zone = zone_info['zone']
-
+    def get_instances(self, zone_info, instance, global_resources):
         # VPC
         vpcs = global_resources.get('vpcs', [])
         subnets = global_resources.get('subnets', [])
@@ -76,17 +114,17 @@ class CollectorManager(BaseManager):
         firewalls = global_resources.get('fire_walls', [])
 
         # Get Instance Groups
-        instance_group = self.gcp_connector.list_instance_group_managers(zone=zone)
-        self.gcp_connector.set_instance_into_instance_group_managers(instance_group, zone=zone)
+        instance_group = global_resources.get('instance_group', [])
+        self.gcp_connector.set_instance_into_instance_group_managers(instance_group)
 
         # Get Machine Types
-        instance_types = self.gcp_connector.list_machine_types(zone=zone)
+        instance_types = global_resources.get('instance_type', [])
 
         # Autoscaling group list
-        auto_scaler = self.gcp_connector.list_auto_scalers(zone=zone)
+        auto_scaler = global_resources.get('auto_scaler', [])
 
         # disks
-        disks = self.gcp_connector.list_disk(zone=zone)
+        disks = global_resources.get('disk', [])
         # TODO: if distro has additional requirement with os_distros for future
         # disk_types = self.gcp_connector.list_disk_types(zone=zone)
 
@@ -112,8 +150,8 @@ class CollectorManager(BaseManager):
         security_groups = [d.get('security_group_name') for d in security_group_vos if
                            d.get('security_group_name', '') != '']
 
-
         google_cloud = server_data['data'].get('google_cloud', {})
+
         _google_cloud = google_cloud.to_primitive()
         labels = _google_cloud.get('labels', [])
         server_data.update({
@@ -136,132 +174,14 @@ class CollectorManager(BaseManager):
             '_metadata': meta_manager.get_metadata(),
             'reference': ReferenceModel({
                 'resource_id': server_data['data']['google_cloud']['self_link'],
-                'external_link': f"https://console.cloud.google.com/compute/instancesDetail/zones/{zone}/instances/{server_data['name']}?project={server_data['data']['compute']['account']}"
+                'external_link': f"https://console.cloud.google.com/compute/instancesDetail/zones/{zone_info.get('zone')}/instances/{server_data['name']}?project={server_data['data']['compute']['account']}"
             })
         })
 
         return Server(server_data, strict=False)
 
-    def list_resources(self, params):
-        '''
-        params = {
-            'zone_info': {
-               'region': 'us-east-1,
-               'zone': 'us-east-1a'
-            },
-            'query': query,
-            'secret_data': 'secret_data',
-            'instance_ids': [instance_id, instance_id, ...],
-            'resources': {
-                'url_maps': url_maps,
-                'images': images,
-                'vpcs': vpcs,
-                'fire_walls': fire_walls,
-                'subnets': subnets,
-                'forwarding_rules': forwarding_rules,
-            },
-            'instances': [...]
-        }
-        '''
 
-        print(f"START LIST Resources {params['zone_info']['zone']}")
-        start_time = time.time()
 
-        # try:
-        secret_data = params.get('secret_data', {})
-
-        zone_info = params.get('zone_info')
-        self._set_project_id_to_zone_info(zone_info, secret_data.get('project_id', ''))
-
-        instances = params.get('instances', [])
-        global_resources = params['resources']
-
-        resources = [self.get_instance(zone_info, instance, global_resources) for instance in instances]
-        print(f'   [{params["zone_info"]["zone"]}] Finished {time.time() - start_time} Seconds')
-        return resources
-
-        # except Exception as e:
-        #     print(f'[ERROR: {params["zone_info"]["zone"]}] : {e}')
-        #     return []
-
-    def list_subnets(self, params):
-        # print(f"[START] LIST Subnet {params['region']}")
-        return self.gcp_connector.list_subnets(region=params['region'])
-
-    def list_forwarding_rules(self, params):
-        # print(f"LIST Forwarding Rules START.. {params['region']}")
-        return self.gcp_connector.list_forwarding_rules(region=params['region'])
-
-    def list_target_pools(self, params):
-        return self.gcp_connector.list_target_pools(region=params['region'])
-
-    def list_region_url_maps(self, params):
-        return self.gcp_connector.list_region_url_maps(region=params['region'])
-
-    def list_region_backend_svcs(self, params):
-        return self.gcp_connector.list_region_backend_svcs(region=params['region'])
-
-    def list_public_images(self):
-
-        public_images = {}
-        public_image_list = [
-            {'key': 'centos', 'value': 'centos-cloud'},
-            {'key': 'coreos', 'value': 'coreos-cloud'},
-            {'key': 'debian', 'value': 'debian-cloud'},
-            {'key': 'google', 'value': 'google-containers'},
-            {'key': 'opensuse', 'value': 'opensuse-cloud'},
-            {'key': 'rhel', 'value': 'rhel-cloud'},
-            {'key': 'suse', 'value': 'suse-cloud'},
-            {'key': 'ubuntu', 'value': 'ubuntu-os-cloud'},
-            {'key': 'windows', 'value': 'windows-cloud'}
-        ]
-
-        for public_image in public_image_list:
-            image_list = self.gcp_connector.list_public_images(project=public_image.get('value'),
-                                                               orderBy='creationTimestamp desc')
-            public_images[public_image.get('key')] = image_list
-        return public_images
-
-    def get_global_resources(self, secret_data, regions):
-        # print("[ GET zone independent resources ]")
-        if self.gcp_connector is None:
-            self.set_connector(secret_data)
-
-        # Global sources within project_id
-        url_maps = self.gcp_connector.list_url_maps()
-        images = self.gcp_connector.list_images()
-        public_images = self.list_public_images()
-
-        vpcs = self.gcp_connector.list_vpcs()
-        fire_walls = self.gcp_connector.list_firewalls()
-        backend_svcs = self.gcp_connector.list_backend_svcs()
-
-        # Regional Sources with region parameter
-        subnets = []
-        forwarding_rules = []
-        target_pools = []
-
-        for region_param in self.generate_region_params(regions):
-            subnets.extend(self.list_subnets(region_param))
-            forwarding_rules.extend(self.list_forwarding_rules(region_param))
-            target_pools.extend(self.list_target_pools(region_param))
-            url_maps.extend(self.list_region_url_maps(region_param))
-            backend_svcs.extend(self.list_region_backend_svcs(region_param))
-
-        return {
-            'public_images': public_images,
-            'images': images,
-            'vpcs': vpcs,
-            'subnets': subnets,
-            'fire_walls': fire_walls,
-            'forwarding_rules': forwarding_rules,
-            'target_pools': target_pools,
-            'url_maps': url_maps,
-            'backend_svcs': backend_svcs
-        }
-
-    def generate_region_params(self, regions):
-        return list(map(lambda region: {'region': region['name']}, regions))
 
     @staticmethod
     def list_cloud_service_types():
@@ -273,9 +193,11 @@ class CollectorManager(BaseManager):
         return [CloudServiceType(cloud_service_type, strict=False)]
 
     @staticmethod
-    def _set_project_id_to_zone_info(zone_info, project_id):
-        if project_id != '':
-            zone_info.update({'project_id': project_id})
+    def _get_zone_and_region(instance):
+        z = instance.get('zone', '')
+        zone = z[z.rfind('/')+1:]
+        region = zone[:-2] if zone != '' else ''
+        return zone, region
 
     @staticmethod
     def get_region_from_result(result):
