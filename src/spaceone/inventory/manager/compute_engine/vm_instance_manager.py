@@ -6,8 +6,8 @@ from spaceone.inventory.model.hardware import Hardware
 
 class VMInstanceManager(BaseManager):
 
-    def __init__(self):
-        pass
+    def __init__(self,  gcp_connector=None):
+        self.google_connector = gcp_connector
 
     def get_server_info(self, instance, instance_types, disks, zone_info, public_images):
         '''
@@ -70,12 +70,11 @@ class VMInstanceManager(BaseManager):
         os_type, os_data = self.get_os_type_and_data(instance, public_images)
         server_dic = self.get_server_dic(instance, os_type, zone_info)
         google_cloud_data = self.get_google_cloud_data(instance)
-        hardware_data = self.get_hardware_data(instance, instance_types)
+        hardware_data = self.get_hardware_data(instance, instance_types, zone_info)
         compute_data = self.get_compute_data(instance, disks, zone_info)
 
         server_dic.update({
             'data': {
-
                 'os': os_data,
                 'google_cloud': google_cloud_data,
                 'hardware': hardware_data,
@@ -131,7 +130,6 @@ class VMInstanceManager(BaseManager):
             if key in os_identity:
                 for image in images:
                     if licenses == image.get('licenses', []):
-                        image_info = image
                         os_arch_index = [i for i, e in enumerate(arch_list) if e in image.get('description', '')]
 
                         os_data.update({'os_distro': 'windows-server' if key == 'windows' else key,
@@ -156,7 +154,7 @@ class VMInstanceManager(BaseManager):
 
         return GoogleCloud(google_cloud, strict=False)
 
-    def get_hardware_data(self, instance, instance_types):
+    def get_hardware_data(self, instance, instance_types, zone_info):
         '''
         core = IntType(default=0)
         memory = FloatType(default=0.0)
@@ -165,6 +163,10 @@ class VMInstanceManager(BaseManager):
         '''
 
         core, memory = self._get_core_and_memory(instance, instance_types)
+
+        if core == 0 and memory == 0:
+            core, memory = self.get_custom_image_type(instance, zone_info, instance_types)
+
         hardware_data = {
             'core': core,
             'memory': memory,
@@ -207,6 +209,17 @@ class VMInstanceManager(BaseManager):
 
         return Compute(compute_data)
 
+    def get_custom_image_type(self, instance, zone_info, instance_types):
+        machine = instance.get('machineType', '')
+        _machine = machine[machine.rfind('/')+1:]
+
+        custom_image_type = self.google_connector.get_machine_type(zone_info.get('zone'), _machine)
+        instance_types.append(custom_image_type)
+
+        cpu = custom_image_type.get('guestCpus', 0)
+        memory = round(float((custom_image_type.get('memoryMb', 0)) / 1024), 2)
+        return cpu, memory
+
     @staticmethod
     def _get_tags_only_string_values(instance):
         tags = {}
@@ -236,10 +249,11 @@ class VMInstanceManager(BaseManager):
     @staticmethod
     def _get_core_and_memory(instance, instance_types):
         machine_type = instance.get('machineType', '')
+        _machine = machine_type[machine_type.rfind('/') + 1:]
         cpu = 0
         memory = 0
         for i_type in instance_types:
-            if i_type.get('selfLink', '') == machine_type:
+            if i_type.get('selfLink', '') == machine_type or i_type.get('name', '') == _machine:
                 cpu = i_type.get('guestCpus')
                 memory = round(float((i_type.get('memoryMb', 0)) / 1024), 2)
                 break

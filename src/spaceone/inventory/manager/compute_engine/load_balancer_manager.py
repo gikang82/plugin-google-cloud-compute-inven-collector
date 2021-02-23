@@ -63,7 +63,6 @@ class LoadBalancerManager(BaseManager):
 
                 load_balancer_data_list.append(LoadBalancer(lb_data, strict=False))
 
-
         return load_balancer_data_list
 
     def get_matched_backend_svc_for_http(self, matched_group, backend_svcs, url_maps):

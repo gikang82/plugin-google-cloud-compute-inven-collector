@@ -1,5 +1,6 @@
 import time
 import logging
+from pprint import pprint
 from spaceone.core.service import *
 from spaceone.inventory.manager.collector_manager import CollectorManager
 
@@ -116,7 +117,7 @@ class CollectorService(BaseService):
         """
 
         start_time = time.time()
-        all_regions = self.collector_manager.list_regions(params['secret_data'])
+        # all_regions = self.collector_manager.list_regions(params['secret_data'])
 
         resource_regions = []
         collected_region_code = []
@@ -131,45 +132,19 @@ class CollectorService(BaseService):
         for cloud_service_type in self.collector_manager.list_cloud_service_types():
             yield cloud_service_type, cloud_service_type_resource_format
 
-        # parameter setting for multi threading
-        mt_params = self.set_params_for_zones(params, all_regions)
+        compute_vm_resources = self.collector_manager.list_resources(params)
 
-        # TODO: parallel collecting instances through multi threading
-        target_params = []
-        is_instance = False
-        for params in mt_params:
-            _instances = self.collector_manager.list_instances_only(params)
+        for resource in compute_vm_resources:
+            collected_region = self.collector_manager.get_region_from_result(resource)
 
-            if _instances:
-                params.update({
-                    'instances':  _instances
-                })
+            if collected_region and collected_region.region_code not in collected_region_code:
+                resource_regions.append(collected_region)
+                collected_region_code.append(collected_region.region_code)
 
-                target_params.append(params)
-                is_instance = True
+            yield resource, server_resource_format
 
-        if is_instance:
-            global_resources = self.collector_manager.get_global_resources(params['secret_data'], all_regions)
-
-            resources = []
-            for params in target_params:
-                params.update({
-                    'resources': global_resources
-                })
-
-                resources.extend(self.collector_manager.list_resources(params))
-
-            for resource in resources:
-                collected_region = self.collector_manager.get_region_from_result(resource)
-
-                if collected_region and collected_region.region_code not in collected_region_code:
-                    resource_regions.append(collected_region)
-                    collected_region_code.append(collected_region.region_code)
-
-                yield resource, server_resource_format
-
-            for resource_region in resource_regions:
-                yield resource_region, region_resource_format
+        for resource_region in resource_regions:
+            yield resource_region, region_resource_format
 
         print(f'############## TOTAL FINISHED {time.time() - start_time} Sec ##################')
 
