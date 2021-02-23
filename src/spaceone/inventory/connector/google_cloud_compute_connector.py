@@ -208,13 +208,22 @@ class GoogleCloudComputeConnector(BaseConnector):
             pass
         return instance_group_list
 
+    def get_machine_type(self, zone, machine_type, **query):
+        response = {}
+        query.update({'project': self.project_id, 'zone': zone, 'machineType': machine_type})
+        try:
+            response = self.client.machineTypes().get(**query).execute()
+        except Exception as e:
+            print(e)
+            pass
+        return response
+
     def list_instance_from_instance_groups(self, instance_group_name, key, loc, **query):
         query = self.generate_query(**query)
         query.update({key: loc, 'instanceGroup': instance_group_name})
         response = []
 
         try:
-
             request = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
                 self.client.regionInstanceGroups().listInstances(**query).execute()
             response = request.get('items', [])

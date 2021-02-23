@@ -80,11 +80,14 @@ class CollectorManager(BaseManager):
         if self.gcp_connector is None:
             self.set_connector(secret_data)
 
+        instance_group = self.gcp_connector.list_instance_group_managers()
+        self.gcp_connector.set_instance_into_instance_group_managers(instance_group)
+
         return {
             'disk': self.gcp_connector.list_disks(),
             'auto_scaler': self.gcp_connector.list_autoscalers(),
             'instance_type': self.gcp_connector.list_machine_types(),
-            'instance_group': self.gcp_connector.list_instance_group_managers(),
+            'instance_group': instance_group,
             'public_images': self.gcp_connector.list_images(secret_data.get('project_id')),
             'vpcs': self.gcp_connector.list_vpcs(),
             'subnets': self.gcp_connector.list_subnetworks(),
@@ -115,7 +118,6 @@ class CollectorManager(BaseManager):
 
         # Get Instance Groups
         instance_group = global_resources.get('instance_group', [])
-        self.gcp_connector.set_instance_into_instance_group_managers(instance_group)
 
         # Get Machine Types
         instance_types = global_resources.get('instance_type', [])
@@ -129,7 +131,7 @@ class CollectorManager(BaseManager):
         # disk_types = self.gcp_connector.list_disk_types(zone=zone)
 
         # call_up all the managers
-        vm_instance_manager: VMInstanceManager = VMInstanceManager()
+        vm_instance_manager: VMInstanceManager = VMInstanceManager(self.gcp_connector)
         auto_scaler_manager: AutoScalerManager = AutoScalerManager()
         lb_manager: LoadBalancerManager = LoadBalancerManager()
         disk_manager: DiskManager = DiskManager()
@@ -140,6 +142,7 @@ class CollectorManager(BaseManager):
         meta_manager: MetadataManager = MetadataManager()
 
         server_data = vm_instance_manager.get_server_info(instance, instance_types, disks, zone_info, public_images)
+
         auto_scaler_vo = auto_scaler_manager.get_auto_scaler_info(instance, instance_group, auto_scaler)
         load_balancer_vos = lb_manager.get_load_balancer_info(instance, instance_group, backend_svcs, url_maps,
                                                               target_pools, forwarding_rules)
