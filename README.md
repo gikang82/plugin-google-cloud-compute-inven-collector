@@ -7,7 +7,7 @@ extract Compute Engine VMs data from Google Cloud platform.
 
 
 Find us also at [Dockerhub](https://hub.docker.com/repository/docker/spaceone/google-cloud-compute)
-> Latest stable version : 1.2.4
+> Latest stable version : 1.2.5
 
 Please contact us if you need any further information. (<support@spaceone.dev>)
 
