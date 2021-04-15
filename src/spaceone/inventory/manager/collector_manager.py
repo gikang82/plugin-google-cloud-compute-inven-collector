@@ -65,8 +65,10 @@ class CollectorManager(BaseManager):
         compute_vms = self.gcp_connector.list_instances()
 
         for compute_vm in compute_vms:
+
             zone, region = self._get_zone_and_region(compute_vm)
             zone_info = {'zone': zone, 'region': region, 'project_id': secret_data.get('project_id', '')}
+
             try:
                 resources.append(self.get_instances(zone_info, compute_vm, global_resources))
             except Exception as e:

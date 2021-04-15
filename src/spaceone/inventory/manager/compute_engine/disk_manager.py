@@ -63,11 +63,11 @@ class DiskManager(BaseManager):
 
     def get_iops_rate(self, disk_type, disk_size, flag):
         const = self._get_iops_constant(disk_type, flag)
-        return disk_size * const
+        return round(disk_size * const, 1)
 
     def get_throughput_rate(self, disk_type, disk_size):
         const = self._get_throughput_constant(disk_type)
-        return disk_size * const
+        return round(disk_size * const, 1)
 
     @staticmethod
     def _get_iops_constant(disk_type, flag):
