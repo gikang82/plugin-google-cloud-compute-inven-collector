@@ -50,7 +50,7 @@ class TestCollector(TestCase):
         resource_stream = self.inventory.Collector.collect({'options': options, 'secret_data': secret_data,
                                                             'filter': filter})
         # print(resource_stream)
-
+        print('###################')
         for res in resource_stream:
             print_json(res)
 
