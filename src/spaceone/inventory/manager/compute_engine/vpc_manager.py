@@ -84,7 +84,3 @@ class VPCManager(BaseManager):
     def _get_network_str(subnet):
         network = subnet.get('network', '')
         return network[network.find('/projects/'):len(network)] if network != '' else None
-
-
-
-

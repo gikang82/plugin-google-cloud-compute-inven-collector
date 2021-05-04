@@ -6,7 +6,6 @@ import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
 from spaceone.core.connector import BaseConnector
-from pprint import pprint
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCE_TYPE_FILE = '%s/conf/%s' % (os.path.dirname(os.path.abspath(__file__)), 'instances.json')
@@ -344,6 +343,18 @@ class GoogleCloudComputeConnector(BaseConnector):
             instance_group.update({
                 'instance_list': inst_list
             })
+
+    def get_instance_in_group(self, key, value, instance_group, **query):
+        query.update({'project': self.project_id, key: value, 'instanceGroup': instance_group})
+        try:
+
+            response = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
+                self.client.regionInstanceGroups().listInstances(**query).execute()
+
+        except Exception as e:
+            _LOGGER.error(f'[InstanceGroupConnector] list_instance_in_group error: {e}')
+
+        return response
 
     def _get_filter_to_params(self, **query):
         filtering_list = []

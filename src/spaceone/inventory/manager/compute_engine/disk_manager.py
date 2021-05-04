@@ -1,5 +1,4 @@
 from spaceone.core.manager import BaseManager
-from pprint import pprint
 from spaceone.inventory.model.disk import Disk
 
 class DiskManager(BaseManager):

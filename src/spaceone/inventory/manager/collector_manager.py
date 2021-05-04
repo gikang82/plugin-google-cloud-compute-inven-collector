@@ -11,7 +11,7 @@ from spaceone.inventory.model.server import Server, ReferenceModel
 from spaceone.inventory.model.region import Region
 from spaceone.inventory.model.cloud_service_type import CloudServiceType
 
-from pprint import pprint
+# from pprint import pprint
 _LOGGER = logging.getLogger(__name__)
 NUMBER_OF_CONCURRENT = 20
 
@@ -85,6 +85,27 @@ class CollectorManager(BaseManager):
         instance_group = self.gcp_connector.list_instance_group_managers()
         self.gcp_connector.set_instance_into_instance_group_managers(instance_group)
 
+        managed_state_less = [i.get('selfLink') for i in instance_group if
+                              i.get('status', {}).get('stateful', {}).get('hasStatefulConfig') == False]
+        instance_groups_instance = []
+
+        for self_link in managed_state_less:
+            _self_link = self_link[:self_link.find('/instanceGroupManagers/')]
+            instance_group_name = self_link[self_link.rfind('/')+1:]
+
+            val = _self_link[_self_link.find('/zones/') + 7:] if 'zones' in self_link \
+                else _self_link[_self_link.find('/regions/') + 9:]
+
+            try:
+                instances = self.gcp_connector.get_instance_in_group('zone', val,
+                                                                     instance_group_name) if 'zones' in self_link else \
+                    self.gcp_connector.get_instance_in_group('region', val, instance_group_name)
+
+                instance_groups_instance.extend(instances.get('items'))
+
+            except Exception as e:
+                print(e)
+
         return {
             'disk': self.gcp_connector.list_disks(),
             'auto_scaler': self.gcp_connector.list_autoscalers(),
@@ -97,7 +118,8 @@ class CollectorManager(BaseManager):
             'forwarding_rules': self.gcp_connector.list_forwarding_rules(),
             'target_pools': self.gcp_connector.list_target_pools(),
             'url_maps': self.gcp_connector.list_url_maps(),
-            'backend_svcs':  self.gcp_connector.list_back_end_services()
+            'backend_svcs':  self.gcp_connector.list_back_end_services(),
+            'managed_stateless': [i.get('instance') for i in instance_groups_instance if 'instance' in i]
         }
 
     def get_instances(self, zone_info, instance, global_resources):
@@ -127,6 +149,8 @@ class CollectorManager(BaseManager):
         # Autoscaling group list
         auto_scaler = global_resources.get('auto_scaler', [])
 
+        instance_in_managed_instance_groups = global_resources.get('managed_stateless', [])
+
         # disks
         disks = global_resources.get('disk', [])
         # TODO: if distro has additional requirement with os_distros for future
@@ -143,7 +167,7 @@ class CollectorManager(BaseManager):
         stackdriver_manager: StackDriverManager = StackDriverManager()
         meta_manager: MetadataManager = MetadataManager()
 
-        server_data = vm_instance_manager.get_server_info(instance, instance_types, disks, zone_info, public_images)
+        server_data = vm_instance_manager.get_server_info(instance, instance_types, disks, zone_info, public_images, instance_in_managed_instance_groups)
 
         auto_scaler_vo = auto_scaler_manager.get_auto_scaler_info(instance, instance_group, auto_scaler)
         load_balancer_vos = lb_manager.get_load_balancer_info(instance, instance_group, backend_svcs, url_maps,
