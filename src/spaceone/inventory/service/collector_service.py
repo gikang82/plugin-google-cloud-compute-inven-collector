@@ -1,6 +1,5 @@
 import time
 import logging
-from pprint import pprint
 from spaceone.core.service import *
 from spaceone.inventory.manager.collector_manager import CollectorManager
 

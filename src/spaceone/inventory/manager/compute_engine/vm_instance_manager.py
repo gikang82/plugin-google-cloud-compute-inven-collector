@@ -9,7 +9,7 @@ class VMInstanceManager(BaseManager):
     def __init__(self,  gcp_connector=None):
         self.google_connector = gcp_connector
 
-    def get_server_info(self, instance, instance_types, disks, zone_info, public_images):
+    def get_server_info(self, instance, instance_types, disks, zone_info, public_images, instance_in_managed_instance_groups):
         '''
         server_data = {
             "name": '',
@@ -26,6 +26,7 @@ class VMInstanceManager(BaseManager):
                     "details": "",
                     "os_distro": "",
                 },
+
                 "google_cloud": {
                     "self_link": "",
                     "fingerprint": "",
@@ -69,7 +70,7 @@ class VMInstanceManager(BaseManager):
 
         os_type, os_data = self.get_os_type_and_data(instance, public_images)
         server_dic = self.get_server_dic(instance, os_type, zone_info)
-        google_cloud_data = self.get_google_cloud_data(instance)
+        google_cloud_data = self.get_google_cloud_data(instance, instance_in_managed_instance_groups)
         hardware_data = self.get_hardware_data(instance, instance_types, zone_info)
         compute_data = self.get_compute_data(instance, disks, zone_info)
 
@@ -142,14 +143,15 @@ class VMInstanceManager(BaseManager):
 
         return os_data
 
-    def get_google_cloud_data(self, instance):
+    def get_google_cloud_data(self, instance, instance_in_managed_instance_groups):
         google_cloud = {
             "self_link": instance.get('selfLink', ''),
             "fingerprint": instance.get('fingerprint', ''),
             "reservation_affinity": self.get_reservation_affinity(instance),
             "deletion_protection": instance.get('deletionProtection', False),
             "scheduling": self.get_scheduling(instance),
-            "labels": self.get_labels(instance)
+            "labels": instance.get('labels', {}),
+            'is_managed_instance': True if instance.get('selfLink', '') in instance_in_managed_instance_groups else False,
         }
 
         return GoogleCloud(google_cloud, strict=False)

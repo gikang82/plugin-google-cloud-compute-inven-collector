@@ -1,5 +1,5 @@
 from schematics import Model
-from schematics.types import ModelType, ListType, StringType
+from schematics.types import ModelType, ListType, StringType, DictType
 from spaceone.inventory.model import OS, GoogleCloud, Hardware, SecurityGroup, Compute, LoadBalancer, VPC, Subnet, \
     AutoScaler, NIC, Disk, ServerMetadata, StackDriver
 
@@ -42,7 +42,7 @@ class Server(Model):
     data = ModelType(ServerData)
     cloud_service_type = StringType(default='Instance')
     cloud_service_group = StringType(default='ComputeEngine')
-    tags = ListType(ModelType(Labels), default=[])
+    tags = DictType(StringType(), default={})
     _metadata = ModelType(ServerMetadata, serialized_name='metadata')
     reference = ModelType(ReferenceModel)
 
