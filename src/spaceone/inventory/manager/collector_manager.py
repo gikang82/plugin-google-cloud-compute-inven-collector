@@ -187,7 +187,7 @@ class CollectorManager(BaseManager):
             'nics': nic_vos,
             'disks': disk_vos,
         })
-
+        _name = instance.get('name', '')
         server_data['data']['compute']['security_groups'] = security_groups
         server_data['data'].update({
             'load_balancers': load_balancer_vos,
@@ -195,10 +195,11 @@ class CollectorManager(BaseManager):
             'auto_scaler': auto_scaler_vo,
             'vpc': vpc_vo,
             'subnet': subnet_vo,
-            'stackdriver': stackdriver_manager.get_stackdriver_info(instance.get('id', ''))
+            'stackdriver': stackdriver_manager.get_stackdriver_info(_name)
         })
 
         server_data.update({
+            'name': _name,
             'tags': labels,
             '_metadata': meta_manager.get_metadata(),
             'reference': ReferenceModel({
