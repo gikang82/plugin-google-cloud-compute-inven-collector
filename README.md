@@ -21,9 +21,7 @@ Please, set authentication privilege for followings:
 
 * Table of Contents
     * [Compute Engine](#compute-engine)
-        * [Compute VM (Instance)](#compute-vminstance)
-Update README
-Uhaha
+    * [Compute VM (Instance)](#compute-vminstance)
 ---
 
 #### [Compute Engine](https://cloud.google.com/compute/docs/apis)
