@@ -2,6 +2,7 @@ __all__ = ['CollectorManager']
 
 import time
 import logging
+
 from spaceone.core.manager import BaseManager
 from spaceone.inventory.connector import GoogleCloudComputeConnector
 from spaceone.inventory.manager.compute_engine import VMInstanceManager, AutoScalerManager, LoadBalancerManager, \
@@ -11,7 +12,6 @@ from spaceone.inventory.model.server import Server, ReferenceModel
 from spaceone.inventory.model.region import Region
 from spaceone.inventory.model.cloud_service_type import CloudServiceType
 
-# from pprint import pprint
 _LOGGER = logging.getLogger(__name__)
 NUMBER_OF_CONCURRENT = 20
 
@@ -58,7 +58,7 @@ class CollectorManager(BaseManager):
         }
         '''
 
-        print(f"START LIST Resources")
+        _LOGGER.debug(f"START LIST Resources")
         start_time = time.time()
         secret_data = params.get('secret_data', {})
         global_resources = self.get_global_resources(secret_data)
@@ -72,13 +72,12 @@ class CollectorManager(BaseManager):
             try:
                 resources.append(self.get_instances(zone_info, compute_vm, global_resources))
             except Exception as e:
-                print(f'[ERROR: {zone}] : {e}')
+                _LOGGER.error(f'Error getting zone : {e}')
 
-        print(f' Compute VMs Finished {time.time() - start_time} Seconds')
+        _LOGGER.debug(f' Compute VMs Finished {time.time() - start_time} Seconds')
         return resources
 
     def get_global_resources(self, secret_data):
-        # print("[ GET zone independent resources ]")
         if self.gcp_connector is None:
             self.set_connector(secret_data)
 
@@ -104,7 +103,7 @@ class CollectorManager(BaseManager):
                 instance_groups_instance.extend(instances.get('items'))
 
             except Exception as e:
-                print(e)
+                _LOGGER.error(f'get_global_resources => {e}')
 
         return {
             'disk': self.gcp_connector.list_disks(),

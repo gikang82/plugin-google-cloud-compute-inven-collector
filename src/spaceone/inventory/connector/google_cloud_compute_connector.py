@@ -34,7 +34,7 @@ class GoogleCloudComputeConnector(BaseConnector):
             credentials = google.oauth2.service_account.Credentials.from_service_account_info(secret_data)
             self.client = googleapiclient.discovery.build('compute', 'v1', credentials=credentials)
         except Exception as e:
-            print(e)
+            _LOGGER.error(f'get_connect => {e}')
             raise self.client(message='connection failed. Please check your authentication information.')
 
     def list_regions(self):
@@ -70,8 +70,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                       previous_response=response)
             except Exception as e:
                 request = None
-                print(e)
-
+                _LOGGER.error(f'list_instances => {e}')
 
         return instance_list
 
@@ -89,7 +88,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                          previous_response=response)
             except Exception as e:
                 request = None
-                print(e)
+                _LOGGER.error(f'list_machine_types => {e}')
 
         return machine_type_list
 
@@ -107,7 +106,8 @@ class GoogleCloudComputeConnector(BaseConnector):
                 request = self.client.urlMaps().aggregatedList_next(previous_request=request, previous_response=response)
             except Exception as e:
                 request = None
-                print(e)
+                _LOGGER.error(f'list_url_maps => {e}')
+
         return url_map_list
 
     def list_back_end_services(self, **query):
@@ -124,7 +124,8 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                             previous_response=response)
             except Exception as e:
                 request = None
-                print(e)
+                _LOGGER.error(f'list_back_end_services => {e}')
+
         return backend_svc_list
 
     def list_disks(self, **query):
@@ -141,7 +142,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                   previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at DiskConnector: disks().aggregatedList(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at DiskConnector: disks().aggregatedList(**query) : skipped \n {e}')
 
         return disk_list
 
@@ -159,7 +160,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                         previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at AutoScalerConnector: autoscalers().aggregatedList(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at AutoScalerConnector: autoscalers().aggregatedList(**query) : skipped \n {e}')
 
         return autoscaler_list
 
@@ -176,7 +177,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                 request = self.client.firewalls().list_next(previous_request=request, previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at FirewallConnector: firewalls().list(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at FirewallConnector: firewalls().list(**query) : skipped \n {e}')
 
         return firewalls_list
 
@@ -218,7 +219,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                            previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at FirewallConnector: instanceGroups().aggregatedList(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at instanceGroups().aggregatedList(**query) : skipped \n {e}')
 
         return instance_group_list
 
@@ -228,7 +229,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         try:
             response = self.client.machineTypes().get(**query).execute()
         except Exception as e:
-            print(e)
+            _LOGGER.error(f'Error occured at machineTypes().get(**query) : skipped \n {e}')
 
         return response
 
@@ -243,8 +244,7 @@ class GoogleCloudComputeConnector(BaseConnector):
             response = request.get('items', [])
 
         except Exception as e:
-            print(f'Error occurred at list_instance: listInstances().execute(**query) : skipped \n {e}')
-
+            _LOGGER.error(f'Error occurred at listInstances().execute(**query) : skipped \n {e}')
 
         return response
 
@@ -263,7 +263,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                                   previous_response=response)
             except Exception as e:
                 request = None
-                print(e)
+                _LOGGER.error(f'Error occurred at instanceGroupManagers().aggregatedList(**query) : skipped \n {e}')
 
         return instance_group_manager_list
 
@@ -279,7 +279,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                 request = self.client.networks().list_next(previous_request=request, previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at networks().list(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at networks().list(**query) : skipped \n {e}')
 
         return network_list
 
@@ -297,7 +297,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                       previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
 
 
         return subnetworks_list
@@ -317,7 +317,7 @@ class GoogleCloudComputeConnector(BaseConnector):
                                                                         previous_response=response)
             except Exception as e:
                 request = None
-                print(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
+                _LOGGER.error(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
 
 
         return target_pool_list
