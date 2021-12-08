@@ -2,6 +2,7 @@ __all__ = ['CollectorManager']
 
 import time
 import logging
+import json
 
 from spaceone.core.manager import BaseManager
 from spaceone.inventory.connector import GoogleCloudComputeConnector
@@ -11,6 +12,7 @@ from spaceone.inventory.manager.metadata.metadata_manager import MetadataManager
 from spaceone.inventory.model.server import Server, ReferenceModel
 from spaceone.inventory.model.region import Region
 from spaceone.inventory.model.cloud_service_type import CloudServiceType
+from spaceone.inventory.model.resource import ErrorResourceResponse, ServerResourceResponse
 
 _LOGGER = logging.getLogger(__name__)
 NUMBER_OF_CONCURRENT = 20
@@ -36,7 +38,6 @@ class CollectorManager(BaseManager):
         self.gcp_connector.get_connect(secret_data)
 
     def list_resources(self, params):
-        resources = []
         '''
         params = {
             'zone_info': {
@@ -57,25 +58,43 @@ class CollectorManager(BaseManager):
             'instances': [...]
         }
         '''
+        resource_responses = []
+        vm_id = ""
 
         _LOGGER.debug(f"START LIST Resources")
         start_time = time.time()
         secret_data = params.get('secret_data', {})
-        global_resources = self.get_global_resources(secret_data)
-        compute_vms = self.gcp_connector.list_instances()
 
-        for compute_vm in compute_vms:
+        try:
+            global_resources = self.get_global_resources(secret_data)
+            compute_vms = self.gcp_connector.list_instances()
 
-            zone, region = self._get_zone_and_region(compute_vm)
-            zone_info = {'zone': zone, 'region': region, 'project_id': secret_data.get('project_id', '')}
+            for compute_vm in compute_vms:
+                vm_id = compute_vm.get('id')
+                zone, region = self._get_zone_and_region(compute_vm)
+                zone_info = {'zone': zone, 'region': region, 'project_id': secret_data.get('project_id', '')}
 
-            try:
-                resources.append(self.get_instances(zone_info, compute_vm, global_resources))
-            except Exception as e:
-                _LOGGER.error(f'Error getting zone : {e}')
+                resource = self.get_instance(zone_info, compute_vm, global_resources)
+                resource_responses.append(ServerResourceResponse({'resource': resource}))
+
+        except Exception as e:
+            _LOGGER.error(f'[list_resources] vm_id => {vm_id}, error => {e}')
+
+            if type(e) is dict:
+                error_resource_response = ErrorResourceResponse({
+                    'message': json.dumps(e),
+                    'resource': {'resource_id': vm_id}
+                })
+            else:
+                error_resource_response = ErrorResourceResponse({
+                    'message': str(e),
+                    'resource': {'resource_id': vm_id}
+                })
+
+            resource_responses.append(error_resource_response)
 
         _LOGGER.debug(f' Compute VMs Finished {time.time() - start_time} Seconds')
-        return resources
+        return resource_responses
 
     def get_global_resources(self, secret_data):
         if self.gcp_connector is None:
@@ -121,7 +140,7 @@ class CollectorManager(BaseManager):
             'managed_stateless': [i.get('instance') for i in instance_groups_instance if 'instance' in i]
         }
 
-    def get_instances(self, zone_info, instance, global_resources):
+    def get_instance(self, zone_info, instance, global_resources):
         # VPC
         vpcs = global_resources.get('vpcs', [])
         subnets = global_resources.get('subnets', [])
@@ -257,8 +276,11 @@ class CollectorManager(BaseManager):
             "us-west4": {"name": "US, Nevada (Las Vegas)", "tags": {"latitude": "36.092498", "longitude": "-115.086073"}}
         }
 
-        match_region_info = REGION_INFO.get(result.get('region_code'))
+        _LOGGER.debug(f'[get_region_from_result] result => {result.to_primitive()}')
 
+        match_region_info = REGION_INFO.get(result.resource.get('region_code'))
+
+        _LOGGER.debug(f'[get_region_from_result] match_region_info => {match_region_info}')
         if match_region_info is not None:
             region_info = match_region_info.copy()
             region_info.update({
@@ -266,5 +288,5 @@ class CollectorManager(BaseManager):
             })
 
             return Region(region_info, strict=False)
-
+        _LOGGER.debug(f'[get_region_from_result] Not matched region_code, match_region_info => {match_region_info}, result => {result}')
         return None

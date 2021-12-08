@@ -2,6 +2,7 @@ import time
 import logging
 from spaceone.core.service import *
 from spaceone.inventory.manager.collector_manager import CollectorManager
+from spaceone.inventory.model.resource import CloudServiceTypeResourceResponse, RegionResourceResponse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,32 +122,32 @@ class CollectorService(BaseService):
         _LOGGER.debug(f'############## Start Collecting Sequence ##################')
         resource_regions = []
         collected_region_code = []
-        # Creating server response base
-        server_resource_format = {'resource_type': 'inventory.Server',
-                                  'match_rules': {'1': ['reference.resource_id']}}
-        # Creating region type
-        region_resource_format = {'resource_type': 'inventory.Region',
-                                  'match_rules': {'1': ['region_code', 'provider']}}
-        # Creating cloud service type resource
-        cloud_service_type_resource_format = {'resource_type': 'inventory.CloudServiceType',
-                                              'match_rules': {'1': ['name', 'group', 'provider']}}
+
         # Returns cloud service type
         for cloud_service_type in self.collector_manager.list_cloud_service_types():
-            yield cloud_service_type, cloud_service_type_resource_format
+            yield CloudServiceTypeResourceResponse({
+                'resource': cloud_service_type
+            })
 
+        # ServerResourceResponse/ErrorResourceResponse type will return
         compute_vm_resources = self.collector_manager.list_resources(params)
+
         # Returns cloud resources
         for resource in compute_vm_resources:
-            collected_region = self.collector_manager.get_region_from_result(resource)
+            # Check if resource type is ServerResourceResponse
+            if resource.resource_type == 'inventory.Server':
+                collected_region = self.collector_manager.get_region_from_result(resource)
+                if collected_region and collected_region.region_code not in collected_region_code:
+                    resource_regions.append(collected_region)
+                    collected_region_code.append(collected_region.region_code)
 
-            if collected_region and collected_region.region_code not in collected_region_code:
-                resource_regions.append(collected_region)
-                collected_region_code.append(collected_region.region_code)
+            yield resource
 
-            yield resource, server_resource_format
         # Returns cloud region type
         for resource_region in resource_regions:
-            yield resource_region, region_resource_format
+            yield RegionResourceResponse({
+                'resource': resource_region
+            })
 
         _LOGGER.debug(f'############## TOTAL FINISHED {time.time() - start_time} Sec ##################')
 
