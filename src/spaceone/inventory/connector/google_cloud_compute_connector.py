@@ -280,7 +280,7 @@ class GoogleCloudComputeConnector(BaseConnector):
     def set_instance_into_instance_group_managers(self, instance_group_managers):
         for instance_group in instance_group_managers:
             key, loc = self._get_loc_from(instance_group)
-            instance_group_name = instance_group.get('baseInstanceName', '')
+            instance_group_name = instance_group.get('name', '')
             inst_list = self.list_instance_from_instance_groups(instance_group_name, key, loc)
             instance_group.update({
                 'instance_list': inst_list
