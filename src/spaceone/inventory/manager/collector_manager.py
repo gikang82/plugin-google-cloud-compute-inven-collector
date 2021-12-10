@@ -90,8 +90,7 @@ class CollectorManager(BaseManager):
                         'message': str(e),
                         'resource': {'resource_id': vm_id}
                     })
-
-            resource_responses.append(error_resource_response)
+                resource_responses.append(error_resource_response)
 
         _LOGGER.debug(f' Compute VMs Finished {time.time() - start_time} Seconds')
         return resource_responses
