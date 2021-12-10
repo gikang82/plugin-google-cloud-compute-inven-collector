@@ -90,8 +90,7 @@ class CollectorManager(BaseManager):
                         'message': str(e),
                         'resource': {'resource_id': vm_id}
                     })
-
-            resource_responses.append(error_resource_response)
+                resource_responses.append(error_resource_response)
 
         _LOGGER.debug(f' Compute VMs Finished {time.time() - start_time} Seconds')
         return resource_responses
@@ -234,6 +233,7 @@ class CollectorManager(BaseManager):
     @staticmethod
     def list_cloud_service_types():
         cloud_service_type = {
+            'service_code': "Compute Engine",
             'tags': {
                 'spaceone:icon': 'https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/cloud-services/google_cloud/Compute_Engine.svg',
             }

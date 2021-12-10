@@ -11,3 +11,4 @@ class CloudServiceType(Model):
     is_primary = BooleanType(default=True)
     is_major = BooleanType(default=True)
     resource_type = StringType(default='inventory.Server')
+    service_code = StringType(serialize_when_none=False)
