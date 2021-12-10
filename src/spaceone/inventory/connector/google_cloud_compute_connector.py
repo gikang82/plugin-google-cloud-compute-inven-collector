@@ -48,7 +48,6 @@ class GoogleCloudComputeConnector(BaseConnector):
     def list_instances(self, **query):
         status_filter = {'key': 'status', 'values': ['PROVISIONING', 'STAGING', 'RUNNING', 'STOPPING', 'REPAIRING',
                                                      'SUSPENDING', 'SUSPENDED', 'TERMINATED']}
-
         if 'filter' in query:
             query.get('filter').append(status_filter)
         else:
@@ -61,16 +60,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.instances().aggregatedList(**query)
 
         while request is not None:
-            try:
-                response = request.execute()
-                for key, _instance_list in response['items'].items():
-                    if 'instances' in _instance_list:
-                        instance_list.extend(_instance_list.get('instances'))
-                request = self.client.instances().aggregatedList_next(previous_request=request,
-                                                                      previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'list_instances => {e}')
+            response = request.execute()
+            for key, _instance_list in response['items'].items():
+                if 'instances' in _instance_list:
+                    instance_list.extend(_instance_list.get('instances'))
+            request = self.client.instances().aggregatedList_next(previous_request=request,
+                                                                  previous_response=response)
 
         return instance_list
 
@@ -79,16 +74,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.machineTypes().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for key, machine_type in response['items'].items():
-                    if 'machineTypes' in machine_type:
-                        machine_type_list.extend(machine_type.get('machineTypes'))
-                request = self.client.machineTypes().aggregatedList_next(previous_request=request,
-                                                                         previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'list_machine_types => {e}')
+            response = request.execute()
+            for key, machine_type in response['items'].items():
+                if 'machineTypes' in machine_type:
+                    machine_type_list.extend(machine_type.get('machineTypes'))
+            request = self.client.machineTypes().aggregatedList_next(previous_request=request,
+                                                                     previous_response=response)
 
         return machine_type_list
 
@@ -98,15 +89,11 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.urlMaps().aggregatedList(**query)
 
         while request is not None:
-            try:
-                response = request.execute()
-                for key, url_scoped_list in response['items'].items():
-                    if 'urlMaps' in url_scoped_list:
-                        url_map_list.extend(url_scoped_list.get('urlMaps'))
-                request = self.client.urlMaps().aggregatedList_next(previous_request=request, previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'list_url_maps => {e}')
+            response = request.execute()
+            for key, url_scoped_list in response['items'].items():
+                if 'urlMaps' in url_scoped_list:
+                    url_map_list.extend(url_scoped_list.get('urlMaps'))
+            request = self.client.urlMaps().aggregatedList_next(previous_request=request, previous_response=response)
 
         return url_map_list
 
@@ -115,16 +102,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.backendServices().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for key, url_scoped_list in response['items'].items():
-                    if 'backendServices' in url_scoped_list:
-                        backend_svc_list.extend(url_scoped_list.get('backendServices'))
-                request = self.client.backendServices().aggregatedList_next(previous_request=request,
-                                                                            previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'list_back_end_services => {e}')
+            response = request.execute()
+            for key, url_scoped_list in response['items'].items():
+                if 'backendServices' in url_scoped_list:
+                    backend_svc_list.extend(url_scoped_list.get('backendServices'))
+            request = self.client.backendServices().aggregatedList_next(previous_request=request,
+                                                                        previous_response=response)
 
         return backend_svc_list
 
@@ -133,16 +116,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.disks().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for key, _disk in response['items'].items():
-                    if 'disks' in _disk:
-                        disk_list.extend(_disk.get('disks'))
-                request = self.client.disks().aggregatedList_next(previous_request=request,
-                                                                  previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at DiskConnector: disks().aggregatedList(**query) : skipped \n {e}')
+            response = request.execute()
+            for key, _disk in response['items'].items():
+                if 'disks' in _disk:
+                    disk_list.extend(_disk.get('disks'))
+            request = self.client.disks().aggregatedList_next(previous_request=request,
+                                                              previous_response=response)
 
         return disk_list
 
@@ -151,16 +130,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.autoscalers().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for key, _autoscaler_list in response['items'].items():
-                    if 'autoscalers' in _autoscaler_list:
-                        autoscaler_list.extend(_autoscaler_list.get('autoscalers'))
-                request = self.client.autoscalers().aggregatedList_next(previous_request=request,
-                                                                        previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at AutoScalerConnector: autoscalers().aggregatedList(**query) : skipped \n {e}')
+            response = request.execute()
+            for key, _autoscaler_list in response['items'].items():
+                if 'autoscalers' in _autoscaler_list:
+                    autoscaler_list.extend(_autoscaler_list.get('autoscalers'))
+            request = self.client.autoscalers().aggregatedList_next(previous_request=request,
+                                                                    previous_response=response)
 
         return autoscaler_list
 
@@ -170,14 +145,10 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.firewalls().list(**query)
 
         while request is not None:
-            try:
-                response = request.execute()
-                for backend_bucket in response.get('items', []):
-                    firewalls_list.append(backend_bucket)
-                request = self.client.firewalls().list_next(previous_request=request, previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at FirewallConnector: firewalls().list(**query) : skipped \n {e}')
+            response = request.execute()
+            for backend_bucket in response.get('items', []):
+                firewalls_list.append(backend_bucket)
+            request = self.client.firewalls().list_next(previous_request=request, previous_response=response)
 
         return firewalls_list
 
@@ -210,26 +181,19 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.instanceGroups().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for key, _instance_group_list in response['items'].items():
-                    if 'instanceGroups' in _instance_group_list:
-                        instance_group_list.extend(_instance_group_list.get('instanceGroups'))
-                request = self.client.instanceGroups().aggregatedList_next(previous_request=request,
-                                                                           previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at instanceGroups().aggregatedList(**query) : skipped \n {e}')
+            response = request.execute()
+            for key, _instance_group_list in response['items'].items():
+                if 'instanceGroups' in _instance_group_list:
+                    instance_group_list.extend(_instance_group_list.get('instanceGroups'))
+            request = self.client.instanceGroups().aggregatedList_next(previous_request=request,
+                                                                       previous_response=response)
 
         return instance_group_list
 
     def get_machine_type(self, zone, machine_type, **query):
         response = {}
         query.update({'project': self.project_id, 'zone': zone, 'machineType': machine_type})
-        try:
-            response = self.client.machineTypes().get(**query).execute()
-        except Exception as e:
-            _LOGGER.error(f'Error occured at machineTypes().get(**query) : skipped \n {e}')
+        response = self.client.machineTypes().get(**query).execute()
 
         return response
 
@@ -238,13 +202,9 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({key: loc, 'instanceGroup': instance_group_name})
         response = []
 
-        try:
-            request = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
-                self.client.regionInstanceGroups().listInstances(**query).execute()
-            response = request.get('items', [])
-
-        except Exception as e:
-            _LOGGER.error(f'Error occurred at listInstances().execute(**query) : skipped \n {e}')
+        request = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
+            self.client.regionInstanceGroups().listInstances(**query).execute()
+        response = request.get('items', [])
 
         return response
 
@@ -254,16 +214,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.instanceGroupManagers().aggregatedList(**query)
 
         while request is not None:
-            try:
-                response = request.execute()
-                for key, _instance_group_manager_list in response['items'].items():
-                    if 'instanceGroupManagers' in _instance_group_manager_list:
-                        instance_group_manager_list.extend(_instance_group_manager_list.get('instanceGroupManagers'))
-                request = self.client.instanceGroupManagers().aggregatedList_next(previous_request=request,
-                                                                                  previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at instanceGroupManagers().aggregatedList(**query) : skipped \n {e}')
+            response = request.execute()
+            for key, _instance_group_manager_list in response['items'].items():
+                if 'instanceGroupManagers' in _instance_group_manager_list:
+                    instance_group_manager_list.extend(_instance_group_manager_list.get('instanceGroupManagers'))
+            request = self.client.instanceGroupManagers().aggregatedList_next(previous_request=request,
+                                                                              previous_response=response)
 
         return instance_group_manager_list
 
@@ -272,14 +228,10 @@ class GoogleCloudComputeConnector(BaseConnector):
         query.update({'project': self.project_id})
         request = self.client.networks().list(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for network in response.get('items', []):
-                    network_list.append(network)
-                request = self.client.networks().list_next(previous_request=request, previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at networks().list(**query) : skipped \n {e}')
+            response = request.execute()
+            for network in response.get('items', []):
+                network_list.append(network)
+            request = self.client.networks().list_next(previous_request=request, previous_response=response)
 
         return network_list
 
@@ -288,17 +240,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         query = self.generate_query(**query)
         request = self.client.subnetworks().aggregatedList(**query)
         while request is not None:
-            try:
-                response = request.execute()
-                for name, _sbworks_list in response['items'].items():
-                    if 'subnetworks' in _sbworks_list:
-                        subnetworks_list.extend(_sbworks_list.get('subnetworks'))
-                request = self.client.addresses().aggregatedList_next(previous_request=request,
-                                                                      previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
-
+            response = request.execute()
+            for name, _sbworks_list in response['items'].items():
+                if 'subnetworks' in _sbworks_list:
+                    subnetworks_list.extend(_sbworks_list.get('subnetworks'))
+            request = self.client.addresses().aggregatedList_next(previous_request=request,
+                                                                  previous_response=response)
 
         return subnetworks_list
 
@@ -308,17 +255,12 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.targetPools().aggregatedList(**query)
 
         while request is not None:
-            try:
-                response = request.execute()
-                for key, pool_scoped_list in response['items'].items():
-                    if 'targetPools' in pool_scoped_list:
-                        target_pool_list.extend(pool_scoped_list.get('targetPools'))
-                request = self.client.targetPools().aggregatedList_next(previous_request=request,
-                                                                        previous_response=response)
-            except Exception as e:
-                request = None
-                _LOGGER.error(f'Error occurred at subnetworks().list(**query) : skipped \n {e}')
-
+            response = request.execute()
+            for key, pool_scoped_list in response['items'].items():
+                if 'targetPools' in pool_scoped_list:
+                    target_pool_list.extend(pool_scoped_list.get('targetPools'))
+            request = self.client.targetPools().aggregatedList_next(previous_request=request,
+                                                                    previous_response=response)
 
         return target_pool_list
 
@@ -346,13 +288,8 @@ class GoogleCloudComputeConnector(BaseConnector):
 
     def get_instance_in_group(self, key, value, instance_group, **query):
         query.update({'project': self.project_id, key: value, 'instanceGroup': instance_group})
-        try:
-
-            response = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
-                self.client.regionInstanceGroups().listInstances(**query).execute()
-
-        except Exception as e:
-            _LOGGER.error(f'[InstanceGroupConnector] list_instance_in_group error: {e}')
+        response = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
+            self.client.regionInstanceGroups().listInstances(**query).execute()
 
         return response
 
