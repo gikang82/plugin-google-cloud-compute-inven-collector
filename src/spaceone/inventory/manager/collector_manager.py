@@ -234,6 +234,7 @@ class CollectorManager(BaseManager):
     @staticmethod
     def list_cloud_service_types():
         cloud_service_type = {
+            'service_code': "Compute Engine",
             'tags': {
                 'spaceone:icon': 'https://spaceone-custom-assets.s3.ap-northeast-2.amazonaws.com/console-assets/icons/cloud-services/google_cloud/Compute_Engine.svg',
             }
