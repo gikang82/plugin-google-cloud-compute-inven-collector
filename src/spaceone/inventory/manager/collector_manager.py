@@ -65,11 +65,11 @@ class CollectorManager(BaseManager):
         start_time = time.time()
         secret_data = params.get('secret_data', {})
 
-        try:
-            global_resources = self.get_global_resources(secret_data)
-            compute_vms = self.gcp_connector.list_instances()
+        global_resources = self.get_global_resources(secret_data)
+        compute_vms = self.gcp_connector.list_instances()
 
-            for compute_vm in compute_vms:
+        for compute_vm in compute_vms:
+            try:
                 vm_id = compute_vm.get('id')
                 zone, region = self._get_zone_and_region(compute_vm)
                 zone_info = {'zone': zone, 'region': region, 'project_id': secret_data.get('project_id', '')}
@@ -77,19 +77,19 @@ class CollectorManager(BaseManager):
                 resource = self.get_instance(zone_info, compute_vm, global_resources)
                 resource_responses.append(ServerResourceResponse({'resource': resource}))
 
-        except Exception as e:
-            _LOGGER.error(f'[list_resources] vm_id => {vm_id}, error => {e}')
+            except Exception as e:
+                _LOGGER.error(f'[list_resources] vm_id => {vm_id}, error => {e}')
 
-            if type(e) is dict:
-                error_resource_response = ErrorResourceResponse({
-                    'message': json.dumps(e),
-                    'resource': {'resource_id': vm_id}
-                })
-            else:
-                error_resource_response = ErrorResourceResponse({
-                    'message': str(e),
-                    'resource': {'resource_id': vm_id}
-                })
+                if type(e) is dict:
+                    error_resource_response = ErrorResourceResponse({
+                        'message': json.dumps(e),
+                        'resource': {'resource_id': vm_id}
+                    })
+                else:
+                    error_resource_response = ErrorResourceResponse({
+                        'message': str(e),
+                        'resource': {'resource_id': vm_id}
+                    })
 
             resource_responses.append(error_resource_response)
 
