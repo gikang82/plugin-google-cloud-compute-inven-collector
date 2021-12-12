@@ -7,9 +7,9 @@ from spaceone.inventory.model.region import Region
 
 class ErrorResource(Model):
     resource_type = StringType(default='inventory.Server')
-    provider = StringType(default='azure')
-    cloud_service_group = StringType(default='Compute')
-    cloud_service_type = StringType(default='VirtualMachine')
+    provider = StringType(default='google_cloud')
+    cloud_service_group = StringType(default='ComputeEngine')
+    cloud_service_type = StringType(default='Instance')
     resource_id = StringType(serialize_when_none=False)
 
 

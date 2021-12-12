@@ -113,15 +113,11 @@ class CollectorManager(BaseManager):
             val = _self_link[_self_link.find('/zones/') + 7:] if 'zones' in self_link \
                 else _self_link[_self_link.find('/regions/') + 9:]
 
-            try:
-                instances = self.gcp_connector.get_instance_in_group('zone', val,
-                                                                     instance_group_name) if 'zones' in self_link else \
-                    self.gcp_connector.get_instance_in_group('region', val, instance_group_name)
+            instances = self.gcp_connector.get_instance_in_group('zone', val,
+                                                                 instance_group_name) if 'zones' in self_link else \
+                self.gcp_connector.get_instance_in_group('region', val, instance_group_name)
 
-                instance_groups_instance.extend(instances.get('items'))
-
-            except Exception as e:
-                _LOGGER.error(f'get_global_resources => {e}')
+            instance_groups_instance.extend(instances.get('items'))
 
         return {
             'disk': self.gcp_connector.list_disks(),
@@ -226,9 +222,6 @@ class CollectorManager(BaseManager):
         })
 
         return Server(server_data, strict=False)
-
-
-
 
     @staticmethod
     def list_cloud_service_types():

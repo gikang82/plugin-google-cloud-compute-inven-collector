@@ -1,8 +1,10 @@
 import time
 import logging
+import json
+
 from spaceone.core.service import *
 from spaceone.inventory.manager.collector_manager import CollectorManager
-from spaceone.inventory.model.resource import CloudServiceTypeResourceResponse, RegionResourceResponse
+from spaceone.inventory.model.resource import CloudServiceTypeResourceResponse, RegionResourceResponse, ErrorResourceResponse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,30 +126,43 @@ class CollectorService(BaseService):
         collected_region_code = []
 
         # Returns cloud service type
-        for cloud_service_type in self.collector_manager.list_cloud_service_types():
-            yield CloudServiceTypeResourceResponse({
-                'resource': cloud_service_type
-            })
+        try:
+            for cloud_service_type in self.collector_manager.list_cloud_service_types():
+                yield CloudServiceTypeResourceResponse({
+                    'resource': cloud_service_type
+                })
+        except Exception as e:
+            _LOGGER.error(f'[list_resources] yield cloud service type => {e}')
+            yield self.generate_error_response(e, "inventory.CloudServiceType")
 
         # ServerResourceResponse/ErrorResourceResponse type will return
-        compute_vm_resources = self.collector_manager.list_resources(params)
+        try:
+            compute_vm_resources = self.collector_manager.list_resources(params)
 
-        # Returns cloud resources
-        for resource in compute_vm_resources:
-            # Check if resource type is ServerResourceResponse
-            if resource.resource_type == 'inventory.Server':
-                collected_region = self.collector_manager.get_region_from_result(resource)
-                if collected_region and collected_region.region_code not in collected_region_code:
-                    resource_regions.append(collected_region)
-                    collected_region_code.append(collected_region.region_code)
+            # Returns cloud resources
+            for resource in compute_vm_resources:
+                # Check if resource type is ServerResourceResponse
+                if resource.resource_type == 'inventory.Server':
+                    collected_region = self.collector_manager.get_region_from_result(resource)
+                    if collected_region and collected_region.region_code not in collected_region_code:
+                        resource_regions.append(collected_region)
+                        collected_region_code.append(collected_region.region_code)
 
-            yield resource
+                yield resource
+
+        except Exception as e:
+            _LOGGER.error(f'[list_resources] get collected_region => {e}')
+            yield self.generate_error_response(e, "inventory.Region")
 
         # Returns cloud region type
-        for resource_region in resource_regions:
-            yield RegionResourceResponse({
-                'resource': resource_region
-            })
+        try:
+            for resource_region in resource_regions:
+                yield RegionResourceResponse({
+                    'resource': resource_region
+                })
+        except Exception as e:
+            _LOGGER.error(f'[list_resources] => yield region {e}')
+            yield self.generate_error_response(e, "inventory.Region")
 
         _LOGGER.debug(f'############## TOTAL FINISHED {time.time() - start_time} Sec ##################')
 
@@ -190,6 +205,21 @@ class CollectorService(BaseService):
                     match_zones.append({'zone': zone.split('/')[-1], 'region': region['name']})
 
         return match_zones
+
+    @staticmethod
+    def generate_error_response(e, resource_type):
+        if type(e) is dict:
+            error_resource_response = ErrorResourceResponse({
+                'message': json.dumps(e),
+                'resource': {'resource_type': resource_type}
+            })
+        else:
+            error_resource_response = ErrorResourceResponse({
+                'message': str(e),
+                'resource': {'resource_type': resource_type}
+            })
+
+        return error_resource_response
 
     @staticmethod
     def match_zones_from_region(all_regions, region):
