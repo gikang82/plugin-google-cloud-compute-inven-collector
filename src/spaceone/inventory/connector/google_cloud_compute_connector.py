@@ -29,13 +29,9 @@ class GoogleCloudComputeConnector(BaseConnector):
             - token_uri: ...
             - ...
         """
-        try:
-            self.project_id = secret_data.get('project_id')
-            credentials = google.oauth2.service_account.Credentials.from_service_account_info(secret_data)
-            self.client = googleapiclient.discovery.build('compute', 'v1', credentials=credentials)
-        except Exception as e:
-            _LOGGER.error(f'get_connect => {e}')
-            raise self.client(message='connection failed. Please check your authentication information.')
+        self.project_id = secret_data.get('project_id')
+        credentials = google.oauth2.service_account.Credentials.from_service_account_info(secret_data)
+        self.client = googleapiclient.discovery.build('compute', 'v1', credentials=credentials)
 
     def list_regions(self):
         result = self.client.regions().list(project=self.project_id).execute()
