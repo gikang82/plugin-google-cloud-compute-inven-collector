@@ -138,9 +138,9 @@ class CollectorManager(BaseManager):
         }
 
     def get_instance(self, zone_info, instance, global_resources):
-        _LOGGER.debug(f'[get_instance] zone_info => {zone_info}')
-        _LOGGER.debug(f'[get_instance] instance => {instance}')
-        _LOGGER.debug(f'[get_instance] global_resources => {global_resources}')
+        #_LOGGER.debug(f'[get_instance] zone_info => {zone_info}')
+        #_LOGGER.debug(f'[get_instance] instance => {instance}')
+        #_LOGGER.debug(f'[get_instance] global_resources => {global_resources}')
 
         # VPC
         vpcs = global_resources.get('vpcs', [])
