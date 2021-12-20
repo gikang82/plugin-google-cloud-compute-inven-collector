@@ -1,6 +1,10 @@
 from itertools import product
+import logging
+
 from spaceone.core.manager import BaseManager
 from spaceone.inventory.model.security_group import SecurityGroup
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SecurityGroupManager(BaseManager):
@@ -28,62 +32,76 @@ class SecurityGroupManager(BaseManager):
                     }
                 ],
         '''
-        sg_rules = []
-        inst_svc_accounts = self._get_svc_account_infos(instance)
-        inst_network_info = self._get_instance_network_info(instance)
+        _LOGGER.debug(f'[get_security_group_rules_info] instance => {instance}')
+        _LOGGER.debug(f'[get_security_group_rules_info] firewalls => {firewalls}')
 
-        for firewall in firewalls:
-            if firewall.get('network', '') in inst_network_info:
-                for fire_wall_target_tag in firewall.get('targetTags', []):
-                    if fire_wall_target_tag in self._get_tag_item_list(instance) \
-                            or 'allow-all-instance' in fire_wall_target_tag:
-                        protocol_ports_list = self.get_allowed_or_denied_info(firewall)
-                        self.append_security_group(protocol_ports_list, firewall, sg_rules)
+        try:
+            sg_rules = []
+            inst_svc_accounts = self._get_svc_account_infos(instance)
+            inst_network_info = self._get_instance_network_info(instance)
 
-            elif "targetServiceAccounts" in firewall:
-                for firewall_target_service_account in firewall.get('targetServiceAccounts', []):
-                    if firewall_target_service_account in inst_svc_accounts or \
-                            'allow-all-instance' in fire_wall_target_tag:
-                        protocol_ports_list = self.get_allowed_or_denied_info(firewall)
-                        self.append_security_group(protocol_ports_list, firewall, sg_rules)
+            for firewall in firewalls:
+                if firewall.get('network', '') in inst_network_info:
+                    for fire_wall_target_tag in firewall.get('targetTags', []):
+                        if fire_wall_target_tag in self._get_tag_item_list(instance) \
+                                or 'allow-all-instance' in fire_wall_target_tag:
+                            protocol_ports_list = self.get_allowed_or_denied_info(firewall)
+                            self.append_security_group(protocol_ports_list, firewall, sg_rules)
 
-            elif "targetTags" not in firewall and "targetServiceAccounts" not in firewall:
-                pass
+                elif "targetServiceAccounts" in firewall:
+                    for firewall_target_service_account in firewall.get('targetServiceAccounts', []):
+                        if firewall_target_service_account in inst_svc_accounts or \
+                                'allow-all-instance' in fire_wall_target_tag:
+                            protocol_ports_list = self.get_allowed_or_denied_info(firewall)
+                            self.append_security_group(protocol_ports_list, firewall, sg_rules)
+
+                elif "targetTags" not in firewall and "targetServiceAccounts" not in firewall:
+                    pass
+        except Exception as e:
+            _LOGGER.error(f'[get_security_group_rules_info] {e}')
 
         return sg_rules
 
     def append_security_group(self, protocol_ports_list, firewall, sg_rules):
-        for protocol_ports in protocol_ports_list:
-            sg_dict = self._get_sg_dict(protocol_ports, firewall)
-            if 'port' in protocol_ports:
-                sg_dict.update({'port': protocol_ports.get('port')})
+        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {protocol_ports_list}')
+        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {firewall}')
+        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {sg_rules}')
+        try:
+            for protocol_ports in protocol_ports_list:
+                sg_dict = self._get_sg_dict(protocol_ports, firewall)
+                if 'port' in protocol_ports:
+                    sg_dict.update({'port': protocol_ports.get('port')})
 
-            sg_list = (dict(zip(sg_dict, x)) for x in product(*sg_dict.values()))
+                sg_list = (dict(zip(sg_dict, x)) for x in product(*sg_dict.values()))
 
-            for sg_single in sg_list:
-                min_port, max_port = self._port_min_and_max(sg_single)
+                for sg_single in sg_list:
+                    min_port, max_port = self._port_min_and_max(sg_single)
 
-                if min_port is not None:
-                    sg_single.update({'port_range_min': min_port})
-                if max_port is not None:
-                    sg_single.update({'port_range_max': max_port})
+                    if min_port is not None:
+                        sg_single.update({'port_range_min': min_port})
+                    if max_port is not None:
+                        sg_single.update({'port_range_max': max_port})
 
-                remote_cidr = sg_single.get('remote_cidr', '')
-                remote_id = sg_single.get('remote_id', '')
+                    remote_cidr = sg_single.get('remote_cidr', '')
+                    remote_id = sg_single.get('remote_id', '')
 
-                sg_single.update({
-                    'priority': firewall.get('priority', 0),
-                    'direction': 'inbound' if 'INGRESS' == firewall.get('direction', '') else 'outbound',
-                    'description': firewall.get('description', ''),
-                    'action': 'allow' if 'allowed' in firewall else 'deny',
-                    'security_group_name': firewall.get('name', ''),
-                    'security_group_id': firewall.get('id', ''),
-                    'remote': remote_cidr if remote_cidr != '' else remote_id
-                })
+                    sg_single.update({
+                        'priority': firewall.get('priority', 0),
+                        'direction': 'inbound' if 'INGRESS' == firewall.get('direction', '') else 'outbound',
+                        'description': firewall.get('description', ''),
+                        'action': 'allow' if 'allowed' in firewall else 'deny',
+                        'security_group_name': firewall.get('name', ''),
+                        'security_group_id': firewall.get('id', ''),
+                        'remote': remote_cidr if remote_cidr != '' else remote_id
+                    })
 
-                sg_rules.append(SecurityGroup(sg_single, strict=False))
+                    sg_rules.append(SecurityGroup(sg_single, strict=False))
+
+        except Exception as e:
+            _LOGGER.debug(f'[append_security_group] {e}')
 
     def get_allowed_or_denied_info(self, firewall):
+        _LOGGER.debug(f'[get_allowed_or_denied_info] firewall => {firewall}')
         if 'allowed' in firewall:
             return self._get_proto_in_format('allowed', firewall)
         else:
@@ -118,11 +136,13 @@ class SecurityGroupManager(BaseManager):
 
     @staticmethod
     def _get_instance_network_info(instance):
+        _LOGGER.debug(f'[_get_instance_network_info] instance => {instance}')
         inst_network_interfaces = instance.get('networkInterfaces', [])
         return [d.get('network') for d in inst_network_interfaces if d.get('network', '') != '']
 
     @staticmethod
     def _get_svc_account_infos(instance):
+        _LOGGER.debug(f'[_get_svc_account_infos] instance => {instance}')
         svc_accounts = instance.get('serviceAccounts', [])
         return [d.get('email') for d in svc_accounts if d.get('email', '') != '']
 
@@ -133,6 +153,8 @@ class SecurityGroupManager(BaseManager):
 
     @staticmethod
     def _get_proto_in_format(flag, firewall):
+        _LOGGER.debug(f'[_get_proto_in_format] flag => {flag}')
+        _LOGGER.debug(f'[_get_proto_in_format] flag => {firewall}')
         protocol_port_list = []
         for proto in firewall.get(flag, []):
             protocol = proto.get('IPProtocol', [])
