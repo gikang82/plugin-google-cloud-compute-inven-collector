@@ -138,9 +138,6 @@ class CollectorManager(BaseManager):
         }
 
     def get_instance(self, zone_info, instance, global_resources):
-        #_LOGGER.debug(f'[get_instance] zone_info => {zone_info}')
-        #_LOGGER.debug(f'[get_instance] instance => {instance}')
-        #_LOGGER.debug(f'[get_instance] global_resources => {global_resources}')
 
         # VPC
         vpcs = global_resources.get('vpcs', [])
@@ -187,26 +184,17 @@ class CollectorManager(BaseManager):
         meta_manager: MetadataManager = MetadataManager()
 
         server_data = vm_instance_manager.get_server_info(instance, instance_types, disks, zone_info, public_images, instance_in_managed_instance_groups)
-        _LOGGER.debug(f'[get_instance] server_data => {server_data}')
         auto_scaler_vo = auto_scaler_manager.get_auto_scaler_info(instance, instance_group, auto_scaler)
-        _LOGGER.debug(f'[get_instance] auto_scaler_vo => {auto_scaler_vo}')
         load_balancer_vos = lb_manager.get_load_balancer_info(instance, instance_group, backend_svcs, url_maps,
                                                               target_pools, forwarding_rules)
-        _LOGGER.debug(f'[get_instance] load_balancer_vos => {load_balancer_vos}')
         disk_vos = disk_manager.get_disk_info(instance, disks)
-        _LOGGER.debug(f'[get_instance] disk_vos => {disk_vos}')
         vpc_vo, subnet_vo = vpc_manager.get_vpc_info(instance, vpcs, subnets)
-        _LOGGER.debug(f'[get_instance] vpc_vo, subnet_vo => {vpc_vo}, {subnet_vo}')
         nic_vos = nic_manager.get_nic_info(instance, subnet_vo)
-        _LOGGER.debug(f'[get_instance] nic_vos => {nic_vos} ')
         security_group_vos = []
         security_group_vos = security_group_manager.get_security_group_rules_info(instance, firewalls)
-        _LOGGER.debug(f'[get_instance] security_group_vos => {security_group_vos} ')
 
         security_groups = [d.get('security_group_name') for d in security_group_vos if
                            d.get('security_group_name', '') != '']
-
-        _LOGGER.debug(f'[get_instance] security_groups => {security_groups} ')
 
         google_cloud = server_data['data'].get('google_cloud', {})
 
@@ -236,7 +224,6 @@ class CollectorManager(BaseManager):
                 'external_link': f"https://console.cloud.google.com/compute/instancesDetail/zones/{zone_info.get('zone')}/instances/{server_data['name']}?project={server_data['data']['compute']['account']}"
             })
         })
-        _LOGGER.debug(f'[get_instance] => {server_data}')
         return Server(server_data, strict=False)
 
     @staticmethod
@@ -251,11 +238,9 @@ class CollectorManager(BaseManager):
 
     @staticmethod
     def _get_zone_and_region(instance):
-        _LOGGER.debug(f'[_get_zone_and_region] => {instance}')
         z = instance.get('zone', '')
         zone = z[z.rfind('/')+1:]
         region = zone[:-2] if zone != '' else ''
-        _LOGGER.debug(f'[_get_zone_and_region] zone => {zone}, region => {region}')
         return zone, region
 
     @staticmethod

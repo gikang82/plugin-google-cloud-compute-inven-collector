@@ -32,33 +32,28 @@ class SecurityGroupManager(BaseManager):
                     }
                 ],
         '''
-        _LOGGER.debug(f'[get_security_group_rules_info] instance => {instance}')
-        _LOGGER.debug(f'[get_security_group_rules_info] firewalls => {firewalls}')
 
-        try:
-            sg_rules = []
-            inst_svc_accounts = self._get_svc_account_infos(instance)
-            inst_network_info = self._get_instance_network_info(instance)
+        sg_rules = []
+        inst_svc_accounts = self._get_svc_account_infos(instance)
+        inst_network_info = self._get_instance_network_info(instance)
 
-            for firewall in firewalls:
-                if firewall.get('network', '') in inst_network_info:
-                    for fire_wall_target_tag in firewall.get('targetTags', []):
-                        if fire_wall_target_tag in self._get_tag_item_list(instance) \
-                                or 'allow-all-instance' in fire_wall_target_tag:
-                            protocol_ports_list = self.get_allowed_or_denied_info(firewall)
-                            self.append_security_group(protocol_ports_list, firewall, sg_rules)
+        for firewall in firewalls:
+            if firewall.get('network', '') in inst_network_info:
+                for fire_wall_target_tag in firewall.get('targetTags', []):
+                    if fire_wall_target_tag in self._get_tag_item_list(instance) \
+                            or 'allow-all-instance' in fire_wall_target_tag:
+                        protocol_ports_list = self.get_allowed_or_denied_info(firewall)
+                        self.append_security_group(protocol_ports_list, firewall, sg_rules)
 
-                elif "targetServiceAccounts" in firewall:
-                    for firewall_target_service_account in firewall.get('targetServiceAccounts', []):
-                        if firewall_target_service_account in inst_svc_accounts or \
-                                'allow-all-instance' in fire_wall_target_tag:
-                            protocol_ports_list = self.get_allowed_or_denied_info(firewall)
-                            self.append_security_group(protocol_ports_list, firewall, sg_rules)
+            elif "targetServiceAccounts" in firewall:
+                for firewall_target_service_account in firewall.get('targetServiceAccounts', []):
+                    if firewall_target_service_account in inst_svc_accounts or \
+                            'allow-all-instance' in fire_wall_target_tag:
+                        protocol_ports_list = self.get_allowed_or_denied_info(firewall)
+                        self.append_security_group(protocol_ports_list, firewall, sg_rules)
 
-                elif "targetTags" not in firewall and "targetServiceAccounts" not in firewall:
-                    pass
-        except Exception as e:
-            _LOGGER.error(f'[get_security_group_rules_info] {e}')
+            elif "targetTags" not in firewall and "targetServiceAccounts" not in firewall:
+                pass
 
         return sg_rules
 
@@ -98,7 +93,7 @@ class SecurityGroupManager(BaseManager):
                     sg_rules.append(SecurityGroup(sg_single, strict=False))
 
         except Exception as e:
-            _LOGGER.debug(f'[append_security_group] {e}')
+            _LOGGER.error(f'[append_security_group] {e}')
 
     def get_allowed_or_denied_info(self, firewall):
         _LOGGER.debug(f'[get_allowed_or_denied_info] firewall => {firewall}')
