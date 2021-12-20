@@ -62,7 +62,7 @@ FILTER_FORMAT = [
     }
 ]
 
-SUPPORTED_RESOURCE_TYPE = ['inventory.Server', 'inventory.Region']
+SUPPORTED_RESOURCE_TYPE = ['inventory.Server', 'inventory.Region', 'inventory.ErrorResource']
 NUMBER_OF_CONCURRENT = 20
 SUPPORTED_FEATURES = ['garbage_collection']
 SUPPORTED_SCHEDULES = ['hours']
@@ -138,7 +138,7 @@ class CollectorService(BaseService):
         # ServerResourceResponse/ErrorResourceResponse type will return
         try:
             compute_vm_resources = self.collector_manager.list_resources(params)
-
+            _LOGGER.debug(f'[list_resources] compute_vm_resources => {compute_vm_resources}')
             # Returns cloud resources
             for resource in compute_vm_resources:
                 # Check if resource type is ServerResourceResponse
