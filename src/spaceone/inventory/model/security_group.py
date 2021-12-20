@@ -13,6 +13,6 @@ class SecurityGroup(Model):
     port_range_max = IntType(serialize_when_none=False)
     security_group_id = StringType()
     description = StringType(default="")
-    direction = StringType(choices=("inboud", "outbound"))
+    direction = StringType(choices=("inbound", "outbound"))
     port = StringType(serialize_when_none=False)
     action = StringType(choices=('allow', 'deny'))
