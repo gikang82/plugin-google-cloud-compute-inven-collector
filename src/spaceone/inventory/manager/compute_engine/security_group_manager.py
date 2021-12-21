@@ -94,7 +94,7 @@ class SecurityGroupManager(BaseManager):
                     sg_rules.append(SecurityGroup(sg_single, strict=False))
 
         except Exception as e:
-            _LOGGER.error(f'[append_security_group] {e}')
+            _LOGGER.error(f'[append_security_group] {e}', exc_info=True)
 
     def get_allowed_or_denied_info(self, firewall):
         _LOGGER.debug(f'[get_allowed_or_denied_info] firewall => {firewall}')
