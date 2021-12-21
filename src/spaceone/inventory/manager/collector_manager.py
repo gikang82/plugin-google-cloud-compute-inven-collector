@@ -78,7 +78,7 @@ class CollectorManager(BaseManager):
                 resource_responses.append(ServerResourceResponse({'resource': resource}))
 
             except Exception as e:
-                _LOGGER.error(f'[list_resources] vm_id => {vm_id}, error => {e}')
+                _LOGGER.error(f'[list_resources] vm_id => {vm_id}, error => {e}', exc_info=True)
 
                 if type(e) is dict:
                     error_resource_response = ErrorResourceResponse({

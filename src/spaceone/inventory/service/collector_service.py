@@ -132,7 +132,7 @@ class CollectorService(BaseService):
                     'resource': cloud_service_type
                 })
         except Exception as e:
-            _LOGGER.error(f'[list_resources] yield cloud service type => {e}')
+            _LOGGER.error(f'[list_resources] yield cloud service type => {e}', exc_info=True)
             yield self.generate_error_response(e, "inventory.CloudServiceType")
 
         # ServerResourceResponse/ErrorResourceResponse type will return
@@ -151,7 +151,7 @@ class CollectorService(BaseService):
                 yield resource
 
         except Exception as e:
-            _LOGGER.error(f'[list_resources] get collected_region => {e}')
+            _LOGGER.error(f'[list_resources] get collected_region => {e}', exc_info=True)
             yield self.generate_error_response(e, "inventory.Region")
 
         # Returns cloud region type
@@ -161,7 +161,7 @@ class CollectorService(BaseService):
                     'resource': resource_region
                 })
         except Exception as e:
-            _LOGGER.error(f'[list_resources] => yield region {e}')
+            _LOGGER.error(f'[list_resources] => yield region {e}', exc_info=True)
             yield self.generate_error_response(e, "inventory.Region")
 
         _LOGGER.debug(f'############## TOTAL FINISHED {time.time() - start_time} Sec ##################')
