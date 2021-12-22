@@ -100,26 +100,30 @@ class CollectorManager(BaseManager):
             self.set_connector(secret_data)
 
         instance_groups_instance = []
-        managed_state_less = []
-
+        _LOGGER.debug(f'[get_global_resources] List Instance Group Managers')
         instance_group = self.gcp_connector.list_instance_group_managers()
+        _LOGGER.debug(f'[get_global_resources] instance_group => {instance_group}')
+        _LOGGER.debug(f'[get_global_resources] Set Instance Into Instance Group Managers')
         self.gcp_connector.set_instance_into_instance_group_managers(instance_group)
 
         managed_state_less = [i.get('selfLink') for i in instance_group if
                               i.get('status', {}).get('stateful', {}).get('hasStatefulConfig') == False]
-
+        _LOGGER.debug(f'[get_global_resources] managed_state_less => {managed_state_less}')
         for self_link in managed_state_less:
+            _LOGGER.debug(f'[get_global_resources] self_link => {self_link}')
             _self_link = self_link[:self_link.find('/instanceGroupManagers/')]
             instance_group_name = self_link[self_link.rfind('/')+1:]
 
             val = _self_link[_self_link.find('/zones/') + 7:] if 'zones' in self_link \
                 else _self_link[_self_link.find('/regions/') + 9:]
+            _LOGGER.debug(f'[get_global_resources] val => {val}')
 
             instances = self.gcp_connector.get_instance_in_group('zone', val,
                                                                  instance_group_name) if 'zones' in self_link else \
                 self.gcp_connector.get_instance_in_group('region', val, instance_group_name)
-
+            _LOGGER.debug(f'[get_global_resources] instances => {instances}')
             instance_groups_instance.extend(instances.get('items'))
+            _LOGGER.debug(f'[get_global_resources] instance_groups_instance => {instance_groups_instance}')
 
         return {
             'disk': self.gcp_connector.list_disks(),

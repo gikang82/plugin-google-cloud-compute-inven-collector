@@ -57,12 +57,13 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_instances] response => {response}')
             for key, _instance_list in response['items'].items():
                 if 'instances' in _instance_list:
                     instance_list.extend(_instance_list.get('instances'))
             request = self.client.instances().aggregatedList_next(previous_request=request,
                                                                   previous_response=response)
-
+        _LOGGER.debug(f'[list_instances] instance_list => {instance_list}')
         return instance_list
 
     def list_machine_types(self, **query):
@@ -71,6 +72,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.machineTypes().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_machine_types] response => {response}')
             for key, machine_type in response['items'].items():
                 if 'machineTypes' in machine_type:
                     machine_type_list.extend(machine_type.get('machineTypes'))
@@ -86,6 +88,7 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_url_maps] response => {response}')
             for key, url_scoped_list in response['items'].items():
                 if 'urlMaps' in url_scoped_list:
                     url_map_list.extend(url_scoped_list.get('urlMaps'))
@@ -99,6 +102,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.backendServices().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_back_end_services] response => {response}')
             for key, url_scoped_list in response['items'].items():
                 if 'backendServices' in url_scoped_list:
                     backend_svc_list.extend(url_scoped_list.get('backendServices'))
@@ -113,6 +117,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.disks().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_disks] response => {response}')
             for key, _disk in response['items'].items():
                 if 'disks' in _disk:
                     disk_list.extend(_disk.get('disks'))
@@ -127,6 +132,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.autoscalers().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_autoscalers] response => {response}')
             for key, _autoscaler_list in response['items'].items():
                 if 'autoscalers' in _autoscaler_list:
                     autoscaler_list.extend(_autoscaler_list.get('autoscalers'))
@@ -142,6 +148,7 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_firewall] response => {response}')
             for backend_bucket in response.get('items', []):
                 firewalls_list.append(backend_bucket)
             request = self.client.firewalls().list_next(previous_request=request, previous_response=response)
@@ -168,7 +175,9 @@ class GoogleCloudComputeConnector(BaseConnector):
                           'orderBy': 'creationTimestamp desc'}
                          )
             response = self.client.images().list(**query).execute()
+            _LOGGER.debug(f'[list_images] response => {response}')
             public_images[public_image.get('key')] = response.get('items', [])
+            _LOGGER.debug(f'[list_images] public_images => {public_images}')
 
         return public_images
 
@@ -201,6 +210,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.instanceGroups().listInstances(**query).execute() if key == 'zone' else \
             self.client.regionInstanceGroups().listInstances(**query).execute()
         response = request.get('items', [])
+        _LOGGER.debug(f'[list_instance_from_instance_groups] response => {response}')
 
         return response
 
@@ -211,6 +221,7 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_instance_group_managers] response => {response}')
             for key, _instance_group_manager_list in response['items'].items():
                 if 'instanceGroupManagers' in _instance_group_manager_list:
                     instance_group_manager_list.extend(_instance_group_manager_list.get('instanceGroupManagers'))
@@ -225,6 +236,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.networks().list(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_vpcs] response => {response}')
             for network in response.get('items', []):
                 network_list.append(network)
             request = self.client.networks().list_next(previous_request=request, previous_response=response)
@@ -237,6 +249,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.subnetworks().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_subnetworks] response => {response}')
             for name, _sbworks_list in response['items'].items():
                 if 'subnetworks' in _sbworks_list:
                     subnetworks_list.extend(_sbworks_list.get('subnetworks'))
@@ -252,6 +265,7 @@ class GoogleCloudComputeConnector(BaseConnector):
 
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_target_pools] response => {response}')
             for key, pool_scoped_list in response['items'].items():
                 if 'targetPools' in pool_scoped_list:
                     target_pool_list.extend(pool_scoped_list.get('targetPools'))
@@ -266,6 +280,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         request = self.client.forwardingRules().aggregatedList(**query)
         while request is not None:
             response = request.execute()
+            _LOGGER.debug(f'[list_forwarding_rules] response => {response}')
             for key, forwarding_scoped_list in response['items'].items():
                 if 'forwardingRules' in forwarding_scoped_list:
                     forwarding_rule_list.extend(forwarding_scoped_list.get('forwardingRules'))
@@ -274,6 +289,7 @@ class GoogleCloudComputeConnector(BaseConnector):
         return forwarding_rule_list
 
     def set_instance_into_instance_group_managers(self, instance_group_managers):
+        _LOGGER.debug(f'[set_instance_into_instance_group_managers] Start')
         for instance_group in instance_group_managers:
             key, loc = self._get_loc_from(instance_group)
             instance_group_name = instance_group.get('name', '')
