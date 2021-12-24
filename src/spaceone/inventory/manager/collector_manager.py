@@ -116,7 +116,6 @@ class CollectorManager(BaseManager):
 
             val = _self_link[_self_link.find('/zones/') + 7:] if 'zones' in self_link \
                 else _self_link[_self_link.find('/regions/') + 9:]
-            _LOGGER.debug(f'[get_global_resources] val => {val}')
 
             instances = self.gcp_connector.get_instance_in_group('zone', val,
                                                                  instance_group_name) if 'zones' in self_link else \
