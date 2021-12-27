@@ -121,7 +121,16 @@ class CollectorManager(BaseManager):
                                                                  instance_group_name) if 'zones' in self_link else \
                 self.gcp_connector.get_instance_in_group('region', val, instance_group_name)
             _LOGGER.debug(f'[get_global_resources] instances => {instances}')
-            instance_groups_instance.extend(instances.get('items'))
+            # if instance created by instance group but stopped, instances has return value
+            '''
+            In some case, instance is exists in instance list but does not in instancegroup.
+            if instance is created by instance_group but stopped
+                instances = {'kind': 'compute#instanceGroupsListInstances'}
+            otherwise 
+                instances = [] or {'items': []}
+            '''
+            if 'items' in instances:
+                instance_groups_instance.extend(instances.get('items'))
             _LOGGER.debug(f'[get_global_resources] instance_groups_instance => {instance_groups_instance}')
 
         return {
