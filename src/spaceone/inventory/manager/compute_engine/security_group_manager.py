@@ -59,9 +59,6 @@ class SecurityGroupManager(BaseManager):
         return sg_rules
 
     def append_security_group(self, protocol_ports_list, firewall, sg_rules):
-        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {protocol_ports_list}')
-        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {firewall}')
-        _LOGGER.debug(f'[append_security_group] protocol_ports_list => {sg_rules}')
         try:
             for protocol_ports in protocol_ports_list:
                 sg_dict = self._get_sg_dict(protocol_ports, firewall)
@@ -97,7 +94,6 @@ class SecurityGroupManager(BaseManager):
             _LOGGER.error(f'[append_security_group] {e}', exc_info=True)
 
     def get_allowed_or_denied_info(self, firewall):
-        _LOGGER.debug(f'[get_allowed_or_denied_info] firewall => {firewall}')
         if 'allowed' in firewall:
             return self._get_proto_in_format('allowed', firewall)
         else:
@@ -132,13 +128,11 @@ class SecurityGroupManager(BaseManager):
 
     @staticmethod
     def _get_instance_network_info(instance):
-        _LOGGER.debug(f'[_get_instance_network_info] instance => {instance}')
         inst_network_interfaces = instance.get('networkInterfaces', [])
         return [d.get('network') for d in inst_network_interfaces if d.get('network', '') != '']
 
     @staticmethod
     def _get_svc_account_infos(instance):
-        _LOGGER.debug(f'[_get_svc_account_infos] instance => {instance}')
         svc_accounts = instance.get('serviceAccounts', [])
         return [d.get('email') for d in svc_accounts if d.get('email', '') != '']
 
@@ -149,8 +143,6 @@ class SecurityGroupManager(BaseManager):
 
     @staticmethod
     def _get_proto_in_format(flag, firewall):
-        _LOGGER.debug(f'[_get_proto_in_format] flag => {flag}')
-        _LOGGER.debug(f'[_get_proto_in_format] flag => {firewall}')
         protocol_port_list = []
         for proto in firewall.get(flag, []):
             protocol = proto.get('IPProtocol', [])
