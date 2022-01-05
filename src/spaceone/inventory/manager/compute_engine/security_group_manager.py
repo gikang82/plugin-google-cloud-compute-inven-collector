@@ -48,8 +48,7 @@ class SecurityGroupManager(BaseManager):
 
             elif "targetServiceAccounts" in firewall:
                 for firewall_target_service_account in firewall.get('targetServiceAccounts', []):
-                    if firewall_target_service_account in inst_svc_accounts or \
-                            'allow-all-instance' in fire_wall_target_tag:
+                    if firewall_target_service_account in inst_svc_accounts:
                         protocol_ports_list = self.get_allowed_or_denied_info(firewall)
                         self.append_security_group(protocol_ports_list, firewall, sg_rules)
 

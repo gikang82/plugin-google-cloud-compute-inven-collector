@@ -29,8 +29,11 @@ class VPCManager(BaseManager):
 
         vpc_data = {}
         subnet_data = {}
+        matched_vpc = None
+
         matched_subnet = self._get_matching_subnet(instance, subnets)
-        matched_vpc = self.get_matching_vpc(matched_subnet, vpcs)
+        if matched_subnet is not None:
+            matched_vpc = self.get_matching_vpc(matched_subnet, vpcs)
 
         if matched_vpc is not None:
             vpc_data.update({
