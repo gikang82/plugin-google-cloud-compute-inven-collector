@@ -47,3 +47,9 @@ Please, set authentication privilege for followings:
         - compute.backendServices.list
         - compute.targetPools.list
         - compute.forwardingRules.list
+
+    - Service Endpoint
+        - https://compute.googleapis.com/compute/v1/projects/{project}/aggregated/{resource_name}
+        - https://compute.googleapis.com/compute/v1/projects/{project}/global/{resource_name}
+        - https://compute.googleapis.com/compute/v1/projects/{project}/zone/{zone}/{resource_name}
+        - https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/{resource_name}
