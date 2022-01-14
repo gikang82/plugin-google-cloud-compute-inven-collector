@@ -38,23 +38,21 @@ class VPCManager(BaseManager):
         matched_subnet = self._get_matching_subnet(instance, subnets)
         matched_vpc = self._get_matching_vpc(matched_subnet, vpcs)
 
-        if matched_vpc is not None:
-            vpc_data.update({
-                'vpc_id': matched_vpc.get('id', ''),
-                'vpc_name': matched_vpc.get('name', ''),
-                'description': matched_vpc.get('description', ''),
-                'self_link': matched_vpc.get('selfLink', ''),
-            })
+        vpc_data.update({
+            'vpc_id': matched_vpc.get('id', ''),
+            'vpc_name': matched_vpc.get('name', ''),
+            'description': matched_vpc.get('description', ''),
+            'self_link': matched_vpc.get('selfLink', ''),
+        })
 
-        if matched_subnet is not None:
-            subnet_data.update({
-                'subnet_id': matched_subnet.get('id', ''),
-                'cidr': matched_subnet.get('ipCidrRange', ''),
-                'subnet_name': matched_subnet.get('name', ''),
-                'gateway_address': matched_subnet.get('gatewayAddress', ''),
-                'vpc': vpc_data,
-                'self_link': matched_subnet.get('selfLink', '')
-            })
+        subnet_data.update({
+            'subnet_id': matched_subnet.get('id', ''),
+            'cidr': matched_subnet.get('ipCidrRange', ''),
+            'subnet_name': matched_subnet.get('name', ''),
+            'gateway_address': matched_subnet.get('gatewayAddress', ''),
+            'vpc': vpc_data,
+            'self_link': matched_subnet.get('selfLink', '')
+        })
 
         return VPC(vpc_data, strict=False), Subnet(subnet_data, strict=False)
 
