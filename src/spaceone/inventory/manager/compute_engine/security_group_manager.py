@@ -44,7 +44,7 @@ class SecurityGroupManager(BaseManager):
                             or 'allow-all-instance' in fire_wall_target_tag:
                         protocol_ports_list = self.get_allowed_or_denied_info(firewall)
                         # skipping, seems to have bug protocol_ports_list => [{'protocol': ['all'], 'port': '0-65535'}]
-                        #self.append_security_group(protocol_ports_list, firewall, sg_rules)
+                        # self.append_security_group(protocol_ports_list, firewall, sg_rules)
 
             elif "targetServiceAccounts" in firewall:
                 for firewall_target_service_account in firewall.get('targetServiceAccounts', []):

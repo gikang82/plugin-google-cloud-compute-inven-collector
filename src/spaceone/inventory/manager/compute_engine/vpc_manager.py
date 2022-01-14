@@ -1,6 +1,10 @@
+import logging
+
 from spaceone.core.manager import BaseManager
 from spaceone.inventory.model.vpc import VPC
 from spaceone.inventory.model.subnet import Subnet
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class VPCManager(BaseManager):
@@ -9,7 +13,7 @@ class VPCManager(BaseManager):
         pass
 
     def get_vpc_info(self, instance, vpcs, subnets):
-        '''
+        """
         vpc_data = {
             "vpc_id": "",
             "vpc_name": "",
@@ -25,15 +29,14 @@ class VPCManager(BaseManager):
             "vpc" : VPC
             "cidr": ""
         }
-        '''
+        """
 
         vpc_data = {}
         subnet_data = {}
-        matched_vpc = None
 
+        # To get vpc, subnet related to instance
         matched_subnet = self._get_matching_subnet(instance, subnets)
-        if matched_subnet is not None:
-            matched_vpc = self.get_matching_vpc(matched_subnet, vpcs)
+        matched_vpc = self._get_matching_vpc(matched_subnet, vpcs)
 
         if matched_vpc is not None:
             vpc_data.update({
@@ -55,9 +58,11 @@ class VPCManager(BaseManager):
 
         return VPC(vpc_data, strict=False), Subnet(subnet_data, strict=False)
 
-    def get_matching_vpc(self, matched_subnet, vpcs):
-        matching_vpc = None
+    @staticmethod
+    def _get_matching_vpc(matched_subnet, vpcs) -> dict:
+        matching_vpc = {}
         network = matched_subnet.get('selfLink', None)
+        # Instance cannot be placed in multiple VPCs(Break after first matched result)
         if network is not None:
             for vpc in vpcs:
                 if network in vpc.get('subnetworks', []):
@@ -67,17 +72,24 @@ class VPCManager(BaseManager):
         return matching_vpc
 
     @staticmethod
-    def _get_matching_subnet(instance, subnets):
-        subnet_data = None
-        subnet_work_links =[]
+    def _get_matching_subnet(instance, subnets) -> dict:
+        subnet_data = {}
+        subnetwork_links = []
+
         network_interfaces = instance.get('networkInterfaces', [])
         for network_interface in network_interfaces:
-            subnet_work = network_interface.get('subnetwork', '')
-            if subnet_work != '':
-                subnet_work_links.append(subnet_work)
-
+            """ 
+            Subnet Type
+            - auto subnet/custom subnet : reference selfLink is supported 
+            - legacy : reference selfLink is not supported
+            """
+            subnetwork = network_interface.get('subnetwork', '')
+            if subnetwork != '':
+                subnetwork_links.append(subnetwork)
+        # Need to enhanced(multiple networkInterface in multiple subnets)
         for subnet in subnets:
-            if subnet.get('selfLink', '') in subnet_work_links:
+            _LOGGER.debug(f'subnet -> {subnet}')
+            if subnet.get('selfLink', '') in subnetwork_links:
                 subnet_data = subnet
                 break
 
